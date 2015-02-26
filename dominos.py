@@ -17,6 +17,7 @@ class Dominos(object):
 
         stores = []
         for result in results:
+            print result['Id'], result['Name']
             stores.append(result['Name'])
 
         return stores
@@ -24,8 +25,19 @@ class Dominos(object):
 
 if __name__ == '__main__':
     d = Dominos()
-    stores = d.search_stores('ig8')
+    stores = d.search_stores('ig6')
 
     print 'Select a store:'
     for i, s in enumerate(stores):
         print '[%d] %s' % (i, s)
+
+'''
+    gets cookie:
+    https://www.dominos.co.uk/Journey/Initialize?fulfilmentmethod=1&storeId=2816
+
+    get item ids:
+    https://www.dominos.co.uk/ProductCatalog/GetStoreCatalog?collectionOnly=fals
+
+    list menu:
+    https://www.dominos.co.uk/Tracking/ListingProductsDisplayed?productIds=12%7C
+'''
