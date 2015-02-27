@@ -5,6 +5,7 @@ class Dominos(object):
 
     def __init__(self):
         self.sess = requests.session()
+        self.stores = []
 
     def search_stores(self, postcode):
         url = 'https://www.dominos.co.uk/storelocatormap/storenamesearch?search=%s' % postcode
@@ -15,12 +16,17 @@ class Dominos(object):
             if len(postcode) > 3:
                 print 'Try a less specific postcode'
 
-        stores = []
         for result in results:
-            print result['Id'], result['Name']
-            stores.append(result['Name'])
+            self.stores.append(result)
 
-        return stores
+        return self.stores
+
+    def select_store(self, idx):
+        try:
+            return store[int(idx)]
+        except IndexError:
+            print 'Invalid store seleeted'
+
 
 
 if __name__ == '__main__':
@@ -29,7 +35,11 @@ if __name__ == '__main__':
 
     print 'Select a store:'
     for i, s in enumerate(stores):
-        print '[%d] %s' % (i, s)
+        print '[%d] %s' % (i, s['Name'])
+
+    store = raw_input('Store: ')
+
+    d.select_store(store)
 
 '''
     gets cookie:
