@@ -25,21 +25,24 @@ class Dominos(object):
         try:
             return store[int(idx)]
         except IndexError:
-            print 'Invalid store seleeted'
-
+            print 'Invalid store selected'
+            return None
 
 
 if __name__ == '__main__':
     d = Dominos()
     stores = d.search_stores('ig6')
 
-    print 'Select a store:'
-    for i, s in enumerate(stores):
-        print '[%d] %s' % (i, s['Name'])
+    valid = False
+    while(not valid):
+        print 'Select a store:'
+        for i, s in enumerate(stores):
+            print '[%d] %s' % (i, s['Name'])
 
-    store = raw_input('Store: ')
-
-    d.select_store(store)
+            store = raw_input('Store: ')
+            selected_store = d.select_store(store)
+            if selected_store:
+                valid = True
 
 '''
     gets cookie:
