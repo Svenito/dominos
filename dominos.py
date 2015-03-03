@@ -1,11 +1,21 @@
 import requests
 import pprint
 import sys
-
+import time
+import calendar
+import unicodedata
 
 class Item(object):
     def __init__(self):
         pass
+
+
+class Basket(object):
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+    def __repr__(self):
+         return self.__dict__
 
 
 class Menu(object):
@@ -18,15 +28,22 @@ class Menu(object):
 
 class Dominos(object):
     def __init__(self):
+        self.epoch = calendar.timegm(time.gmtime())
         self.sess = requests.session()
+        print self.sess
         self.base_url = 'https://www.dominos.co.uk/'
         self.stores = []
         self.menu = Menu()
 
+        url = self.base_url + '/Home/SessionExpire'
+        r = self.sess.get(url)
+        print 'expire ', r.status_code
+
     def search_stores(self, postcode):
-        url = self.base_url + ('storelocatormap/storenamesearch?search=%s' % postcode)
+        url = self.base_url + ('storelocatormap/storenamesearch')
+        payload = {'search': postcode}
+        results = self.sess.get(url, params=payload).json()
         print url
-        results = self.sess.get(url).json()
 
         if len(results) < 1:
             print 'No stores found near', postcode
@@ -47,18 +64,33 @@ class Dominos(object):
 
 
     def get_cookie(self, store, postcode):
-        query = ('Journey/Initialize?fulfilmentmethod=1'
-                 '&storeId=%s&postcode=%s' % (store['Id'], postcode))
-        url = self.base_url + query
-        print url
+        url = self.base_url + 'Journey/Initialize'
+        payload = {'fulfilmentmethod':'1',
+                   'storeId' : store['Id'],
+                   'postcode' : postcode}
+        print payload
+        print self.sess.cookies
+        r = self.sess.get(url, params=payload)
+
+    def get_basket(self):
+        url = self.base_url + '/Basket/GetBasket'
         r = self.sess.get(url)
-        print r.status_code, self.sess.headers, self.sess.cookies
+        print r.status_code
+        try:
+            self.basket = Basket(**(r.json()))
+        except:
+            print 'Failed to get basket'
+            return False
+        return True
+
 
     def get_store_context(self):
         url = self.base_url + 'ProductCatalog/GetStoreContext'
-        print url
-        r = self.sess.get(url)
+        payload = {'_' : self.epoch}
+        print self.sess.cookies
+        r = self.sess.get(url, params=payload)
         print r.status_code
+
         try:
             context = r.json()
         except:
@@ -74,13 +106,28 @@ class Dominos(object):
                 (self.menu_version, store['Id']))
         print url
         r = self.sess.get(url)
+        item_num = 0
         for item in r.json():
             print '----------------------'
-            for i in item:
-                pprint.pprint(i)
-            return
-            self.menu.addItem(item)
+            for i in item['Subcategories']:
+                print i['Name']
+                for p in i['Products']:
+                    name = unicodedata.normalize('NFKD', p['Name']).encode('ascii','ignore')
+                    print '[%d] %s (%s)' % (item_num, name, p['ProductId'])
+                    item_num += 1
+        return
+        self.menu.addItem(item)
 
+    def add_margarita(self):
+        url = self.base_url + '/Basket/AddPizza/'
+        payload = {"basketItemId":None,"stepId":0,"saveName":None,"quantity":1,"sizeId":3,"productId":12,"ingredients":[42,36],"productIdHalfTwo":0,"ingredientsHalfTwo":[],"recipeReferrer":0,"recipeReferralCode":None}
+
+        r = self.sess.post(url, data=payload)
+        print r.status_code
+        print r.text
+
+        self.get_basket()
+        pprint.pprint(self.basket)
 
 
 if __name__ == '__main__':
@@ -101,9 +148,15 @@ if __name__ == '__main__':
 
     postcode = raw_input('Enter your postcode: ')
     d.get_cookie(store, postcode)
+
+    if not d.get_basket():
+        sys.exit(0)
+
     if not d.get_store_context():
         sys.exit(0)
     d.get_menu(store)
+
+    d.add_margarita()
 '''
     gets cookie:
     https://www.dominos.co.uk/Journey/Initialize?fulfilmentmethod=1&storeId=2816
