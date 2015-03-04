@@ -6,6 +6,7 @@ import sys
 import time
 import calendar
 import unicodedata
+import json
 
 class Item(object):
     def __init__(self):
@@ -38,7 +39,7 @@ class Dominos(object):
 
         url = self.base_url + '/Home/SessionExpire'
         r = self.sess.get(url)
-        print 'expire ', r.status_code
+        print 'expire ', r.history
 
     def get_epoch(self):
         return calendar.timegm(time.gmtime())
@@ -72,36 +73,43 @@ class Dominos(object):
         payload = {'fulfilmentmethod':'1',
                    'storeId' : store['Id'],
                    'postcode' : postcode}
-        print payload
-        print self.sess.cookies
+        print 'Cookie pget payload', payload
+        print 'cookies before:', self.sess.cookies
         r = self.sess.get(url, params=payload)
+        print 'cookies after:', self.sess.cookies
+        print 'Cookie get status:', r.status_code
+        print 'Cookie history:', r.history
+        print
+
+    def get_store_context(self):
+        url = self.base_url + 'ProductCatalog/GetStoreContext'
+        payload = {'_' : self.get_epoch()}
+        headers = {'content-type': 'application/json; charset=utf-8'}
+        print 'Context cookie state:', self.sess.cookies
+        r = self.sess.get(url, params=payload, headers=headers)
+        print 'Context status:', r.status_code
+
+        try:
+            context = r.json()
+            print 'Context OK'
+        except:
+            print 'Unable to get context'
+            return False
+
+        self.menu_version = context['sessionContext']['menuVersion']
+        print
+        return True
 
     def get_basket(self):
-        url = self.base_url + '/Basket/GetBasket'
+        url = self.base_url + '/Basket/GetBasket?'
         r = self.sess.get(url)
+        print self.sess.cookies
         print r.status_code
         try:
             self.basket = Basket(**(r.json()))
         except:
             print 'Failed to get basket'
             return False
-        return True
-
-
-    def get_store_context(self):
-        url = self.base_url + 'ProductCatalog/GetStoreContext'
-        payload = {'_' : self.get_epoch()}
-        print self.sess.cookies
-        r = self.sess.get(url, params=payload)
-        print r.status_code
-
-        try:
-            context = r.json()
-        except:
-            print 'Unable to get context'
-            return False
-
-        self.menu_version = context['sessionContext']['menuVersion']
         return True
 
     def get_menu(self, store):
@@ -122,14 +130,16 @@ class Dominos(object):
 
     def add_margarita(self):
         url = self.base_url + '/Basket/AddPizza/'
-        payload = {"basketItemId":None,"stepId":0,"saveName":None,"quantity":1,"sizeId":3,"productId":12,"ingredients":[42,36],"productIdHalfTwo":0,"ingredientsHalfTwo":[],"recipeReferrer":0,"recipeReferralCode":None}
+        payload = {"basketItemId":'null',"stepId":0,"saveName":'null',"quantity":1,"sizeId":3,"productId":12,"ingredients[]":[42,36],"productIdHalfTwo":0,"ingredientsHalfTwo[]":[],"recipeReferrer":0,"recipeReferralCode":'null'}
 
-        r = self.sess.post(url, data=payload)
+        headers = {'content-type': 'application/json; charset=utf-8'}
+
+        r = self.sess.post(url, params=payload, headers=headers)
         print r.status_code
-        print r.text
+        print r.json()
 
-        self.get_basket()
-        pprint.pprint(self.basket)
+        #self.get_basket()
+        #pprint.pprint(self.basket)
 
 
 if __name__ == '__main__':
@@ -150,15 +160,24 @@ if __name__ == '__main__':
 
     postcode = raw_input('Enter your postcode: ')
     d.get_cookie(store, postcode)
+    time.sleep(2)
 
-    if not d.get_basket():
-        sys.exit(0)
+    doit = True
+    while not d.get_store_context() and doit:
+        d = raw_input('carry on?')
+        if d == 'n':
+            doit = False
 
-    if not d.get_store_context():
-        sys.exit(0)
+
+    doit = True
+    while not d.get_basket() and doit:
+        if d == 'n':
+            doit = False
+
+
     d.get_menu(store)
 
-    #d.add_margarita()
+    d.add_margarita()
 '''
     gets cookie:
     https://www.dominos.co.uk/Journey/Initialize?fulfilmentmethod=1&storeId=2816
