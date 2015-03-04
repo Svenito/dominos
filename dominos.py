@@ -1,17 +1,15 @@
 #!/usr/bin/env python2.7
 
 import requests
-import pprint
 import sys
 import time
 import calendar
-import unicodedata
-import json
-import cmd
+
 
 class Item(object):
     def __init__(self, **entries):
         self.__dict__.update(entries)
+        self.idx = 0
 
 
 class Basket(object):
@@ -19,7 +17,7 @@ class Basket(object):
         self.__dict__.update(entries)
 
     def __repr__(self):
-         return str(self.__dict__)
+        return str(self.__dict__)
 
 
 class Menu(object):
@@ -28,16 +26,8 @@ class Menu(object):
 
     def addItem(self, category, item):
         self.items.setdefault(category, [])
+        item.idx = len(self.items[category])
         self.items[category].append(item)
-
-    def print_menu(self, category=None):
-        idx = 0
-        for cat, items in self.items.iteritems():
-            print '-------------'
-            print cat
-            for item in items:
-                print(u'[%d] %s - %s' % (idx, item.Name, item.DisplayPrice))
-                idx += 1
 
 
 class Dominos(object):
@@ -53,7 +43,7 @@ class Dominos(object):
 
     def reset_session(self):
         url = self.base_url + '/Home/SessionExpire'
-        r = self.sess.get(url)
+        self.sess.get(url)
         self.sess = requests.session()
 
     def get_epoch(self):
@@ -81,9 +71,10 @@ class Dominos(object):
 
     def get_cookie(self, store, postcode):
         url = self.base_url + 'Journey/Initialize'
-        payload = {'fulfilmentmethod':'1',
-                   'storeId' : store['Id'],
-                   'postcode' : postcode}
+        payload = {'fulfilmentmethod': '1',
+                   'storeId': store['Id'],
+                   'postcode': postcode}
+
         print 'Cookie get payload', payload
         print 'cookies before:', self.sess.cookies
         r = self.sess.get(url, params=payload)
@@ -94,7 +85,7 @@ class Dominos(object):
 
     def get_store_context(self):
         url = self.base_url + 'ProductCatalog/GetStoreContext'
-        payload = {'_' : self.get_epoch()}
+        payload = {'_': self.get_epoch()}
         headers = {'content-type': 'application/json; charset=utf-8'}
         print 'Context cookie state:', self.sess.cookies
         r = self.sess.get(url, params=payload, headers=headers)
@@ -132,11 +123,11 @@ class Dominos(object):
             return None
 
         url = (self.base_url + '/ProductCatalog/GetStoreCatalog?'
-                'collectionOnly=false&menuVersion=%s&storeId=%s' %
-                (self.menu_version, store['Id']))
+               'collectionOnly=false&menuVersion=%s&storeId=%s' %
+               (self.menu_version, store['Id']))
         print url
         r = self.sess.get(url)
-        item_num = 0
+
         for item in r.json():
             for i in item['Subcategories']:
                 for p in i['Products']:
@@ -146,12 +137,22 @@ class Dominos(object):
         self.menu.print_menu(s)
 
     def add_item(self, item):
-        url = self.base_url + '/Basket/AddPizza/'
+        #url = self.base_url + '/Basket/AddPizza/'
         pass
 
     def add_margarita(self):
         url = self.base_url + '/Basket/AddPizza/'
-        payload = {"basketItemId":'null',"stepId":0,"saveName":'null',"quantity":1,"sizeId":3,"productId":12,"ingredients[]":[42,36],"productIdHalfTwo":0,"ingredientsHalfTwo[]":[],"recipeReferrer":0,"recipeReferralCode":'null'}
+        payload = {"basketItemId": 'null',
+                   "stepId": 0,
+                   "saveName": 'null',
+                   "quantity": 1,
+                   "sizeId": 3,
+                   "productId": 12,
+                   "ingredients[]": [42, 36],
+                   "productIdHalfTwo": 0,
+                   "ingredientsHalfTwo[]": [],
+                   "recipeReferrer": 0,
+                   "recipeReferralCode": 'null'}
 
         headers = {'content-type': 'application/json; charset=utf-8'}
 
@@ -159,8 +160,6 @@ class Dominos(object):
         print r.status_code
         print r.json()
 
-        #self.get_basket()
-        #pprint.pprint(self.basket)
 
 if __name__ == '__main__':
     d = Dominos()
@@ -189,19 +188,16 @@ if __name__ == '__main__':
             doit = False
         d.reset_session()
 
-
     doit = True
     while not d.get_basket() and doit:
         a = raw_input('carry on?')
         if a == 'n':
             doit = False
 
-
     d.get_menu(store)
 
     d.show_menu()
 
-    #d.add_margarita()
     '''
 
     gets cookie:

@@ -7,7 +7,7 @@ from dominos import Dominos
 
 class DominosCLI(cmd.Cmd):
     def __init__(self):
-        #super(DominosCLI, self).__init__()
+        # super(DominosCLI, self).__init__()
         cmd.Cmd.__init__(self)
         self.prompt = 'Pizza> '
         self.d = Dominos()
@@ -25,7 +25,7 @@ class DominosCLI(cmd.Cmd):
 
     def help_locate_store(self):
         print('Search for a Dominos by postcode/location name. Returns '
-                'a list of stores that match the given search term')
+              'a list of stores that match the given search term')
 
     def do_set_store(self, store_idx):
         store_idx = int(store_idx)
@@ -37,9 +37,9 @@ class DominosCLI(cmd.Cmd):
 
     def help_set_store(self):
         print('Select a store by number. Use `locate_store` to get a list '
-                'of stores based on a search term.')
+              'of stores based on a search term.')
 
-    def do_init_delivery(self, postcode):
+    def do_deliver_to(self, postcode):
         self.postcode = postcode
         if not self.current_store or not self.postcode:
             print '[Error] A current store and delivery postcode must be set'
@@ -48,7 +48,8 @@ class DominosCLI(cmd.Cmd):
         self.d.get_cookie(self.current_store, self.postcode)
         time.sleep(1)
         if not self.d.get_store_context():
-            print '[Error] Failed to get store context. Try setting the store again.'
+            print('[Error] Failed to get store context. '
+                  'Try setting the store again.')
             self.d.reset_session()
             return
 
@@ -62,25 +63,24 @@ class DominosCLI(cmd.Cmd):
         else:
             print '[OK] Context and basket initialised'
 
-    def help_init_delivery(self):
+    def help_deliver_to(self):
         print('Do the required set up for a delivery from the previously '
-                'selected store. Will error if no store has been set. '
-                'Requires the delivery postcode as an argument.')
+              'selected store. Will error if no store has been set. '
+              'Requires the delivery postcode as an argument.')
 
-    def do_show_menu(self, s):
+    def do_menu(self, s):
         if not self.current_store:
             print '[Error] No store set. Run `set_store` first'
             return
 
         self.d.get_menu(self.current_store)
-        print 'Menu for ' , self.current_store['Name']
+        print 'Menu for ', self.current_store['Name']
         self.d.show_menu(s)
 
-    def help_show_menu(self):
+    def help_menu(self):
         print('Shows the menu for the currently selected store. '
-                'Will error if no store is set and requires '
-                '`init_delivery` to have been run.')
-
+              'Will error if no store is set and requires '
+              '`init_delivery` to have been run.')
 
     def do_basket(self, s):
         basket = self.d.basket
@@ -96,5 +96,3 @@ class DominosCLI(cmd.Cmd):
 if __name__ == '__main__':
     x = DominosCLI()
     x.cmdloop()
-
-
