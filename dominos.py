@@ -1,3 +1,5 @@
+#!/usr/bin/env python2.7
+
 import requests
 import pprint
 import sys
@@ -28,7 +30,6 @@ class Menu(object):
 
 class Dominos(object):
     def __init__(self):
-        self.epoch = calendar.timegm(time.gmtime())
         self.sess = requests.session()
         print self.sess
         self.base_url = 'https://www.dominos.co.uk/'
@@ -38,6 +39,9 @@ class Dominos(object):
         url = self.base_url + '/Home/SessionExpire'
         r = self.sess.get(url)
         print 'expire ', r.status_code
+
+    def get_epoch(self):
+        return calendar.timegm(time.gmtime())
 
     def search_stores(self, postcode):
         url = self.base_url + ('storelocatormap/storenamesearch')
@@ -86,7 +90,7 @@ class Dominos(object):
 
     def get_store_context(self):
         url = self.base_url + 'ProductCatalog/GetStoreContext'
-        payload = {'_' : self.epoch}
+        payload = {'_' : self.get_epoch()}
         print self.sess.cookies
         r = self.sess.get(url, params=payload)
         print r.status_code
@@ -115,8 +119,6 @@ class Dominos(object):
                     name = unicodedata.normalize('NFKD', p['Name']).encode('ascii','ignore')
                     print '[%d] %s (%s)' % (item_num, name, p['ProductId'])
                     item_num += 1
-        return
-        self.menu.addItem(item)
 
     def add_margarita(self):
         url = self.base_url + '/Basket/AddPizza/'
@@ -156,7 +158,7 @@ if __name__ == '__main__':
         sys.exit(0)
     d.get_menu(store)
 
-    d.add_margarita()
+    #d.add_margarita()
 '''
     gets cookie:
     https://www.dominos.co.uk/Journey/Initialize?fulfilmentmethod=1&storeId=2816
