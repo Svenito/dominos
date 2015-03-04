@@ -73,9 +73,14 @@ class DominosCLI(cmd.Cmd):
             print '[Error] No store set. Run `set_store` first'
             return
 
-        self.d.get_menu(self.current_store)
+        menu = self.d.get_menu(self.current_store)
         print 'Menu for ', self.current_store['Name']
-        self.d.show_menu(s)
+        for cat, items in menu.items.iteritems():
+            print '---------------------------------'
+            print cat
+            for item in items:
+                print(u'[%s] %s - %s' %
+                      (item.idx, item.Name, item.DisplayPrice))
 
     def help_menu(self):
         print('Shows the menu for the currently selected store. '

@@ -9,7 +9,9 @@ import calendar
 class Item(object):
     def __init__(self, **entries):
         self.__dict__.update(entries)
-        self.idx = 0
+
+    def __repr__(self):
+        return str(self.__dict__)
 
 
 class Basket(object):
@@ -26,7 +28,6 @@ class Menu(object):
 
     def addItem(self, category, item):
         self.items.setdefault(category, [])
-        item.idx = len(self.items[category])
         self.items[category].append(item)
 
 
@@ -128,16 +129,22 @@ class Dominos(object):
         print url
         r = self.sess.get(url)
 
+        idx = 0
         for item in r.json():
             for i in item['Subcategories']:
                 for p in i['Products']:
+                    print idx
+                    p['idx'] = idx
                     self.menu.addItem(i['Name'], Item(**p))
+                    idx += 1
+
+        return self.menu
 
     def show_menu(self, s=None):
         self.menu.print_menu(s)
 
     def add_item(self, item):
-        #url = self.base_url + '/Basket/AddPizza/'
+        # url = self.base_url + '/Basket/AddPizza/'
         pass
 
     def add_margarita(self):
