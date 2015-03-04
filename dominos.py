@@ -9,8 +9,8 @@ import unicodedata
 import json
 
 class Item(object):
-    def __init__(self):
-        pass
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
 
 
 class Basket(object):
@@ -25,8 +25,20 @@ class Menu(object):
     def __init__(self):
         self.items = {}
 
-    def addItem(self, item):
-        self.items[item['ProductId']] = item
+    def addItem(self, category, item):
+        self.items.setdefault(category, [])
+
+        self.items[category].append(item)
+
+    def print_menu(self):
+        idx = 0
+        for cat, items in self.items.iteritems():
+            print '-------------'
+            print cat
+            for item in items:
+                name = unicodedata.normalize('NFKD', item.Name).encode('ascii','ignore')
+                print '[%d] %s' % (idx, name)
+                idx += 1
 
 
 class Dominos(object):
@@ -37,9 +49,12 @@ class Dominos(object):
         self.stores = []
         self.menu = Menu()
 
+        self.reset_session()
+
+    def reset_session(self):
         url = self.base_url + '/Home/SessionExpire'
         r = self.sess.get(url)
-        print 'expire ', r.history
+        self.sess = requests.session()
 
     def get_epoch(self):
         return calendar.timegm(time.gmtime())
@@ -120,13 +135,15 @@ class Dominos(object):
         r = self.sess.get(url)
         item_num = 0
         for item in r.json():
-            print '----------------------'
             for i in item['Subcategories']:
-                print i['Name']
                 for p in i['Products']:
-                    name = unicodedata.normalize('NFKD', p['Name']).encode('ascii','ignore')
-                    print '[%d] %s (%s)' % (item_num, name, p['ProductId'])
-                    item_num += 1
+                    self.menu.addItem(i['Name'], Item(**p))
+
+    def show_menu(self):
+        self.menu.print_menu()
+
+    def add_item(self, item):
+        pass
 
     def add_margarita(self):
         url = self.base_url + '/Basket/AddPizza/'
@@ -164,20 +181,24 @@ if __name__ == '__main__':
 
     doit = True
     while not d.get_store_context() and doit:
-        d = raw_input('carry on?')
-        if d == 'n':
+        a = raw_input('carry on?')
+        if a == 'n':
             doit = False
+        d.reset_session()
 
 
     doit = True
     while not d.get_basket() and doit:
-        if d == 'n':
+        a = raw_input('carry on?')
+        if a == 'n':
             doit = False
 
 
     d.get_menu(store)
 
-    d.add_margarita()
+    d.show_menu()
+
+    #d.add_margarita()
 '''
     gets cookie:
     https://www.dominos.co.uk/Journey/Initialize?fulfilmentmethod=1&storeId=2816
