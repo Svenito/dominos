@@ -13,6 +13,7 @@ class DominosCLI(cmd.Cmd):
         self.d = Dominos()
         self.postcode = None
         self.current_store = None
+        self.items = {}
 
     def do_locate_store(self, s):
         stores = self.d.search_stores(s)
@@ -56,6 +57,7 @@ class DominosCLI(cmd.Cmd):
         tries = 0
         while not self.d.get_basket() and tries < 2:
             print '.',
+            tries += 2
 
         if tries >= 2:
             print '[Error] Failed to get basket'
@@ -79,6 +81,7 @@ class DominosCLI(cmd.Cmd):
             print '---------------------------------'
             print cat
             for item in items:
+                self.items[item.idx] = item
                 print(u'[%s] %s - %s' %
                       (item.idx, item.Name, item.DisplayPrice))
 
@@ -86,6 +89,25 @@ class DominosCLI(cmd.Cmd):
         print('Shows the menu for the currently selected store. '
               'Will error if no store is set and requires '
               '`init_delivery` to have been run.')
+
+    def do_details(self, item_idx):
+        if not self.items:
+            print '[Error] Please run `menu` before this cmd'
+
+        item_idx = int(item_idx)
+        if not item_idx in self.items.keys():
+            print '[Error] Item with idx %s not found' % item_idx
+            return
+
+        item = self.items[item_idx]
+
+        print u'%s - %s' % (item.Name, item.DisplayPrice)
+        print u'%s' % item.Description
+        print 'Sizes available:'
+        for sku in item.ProductSkus:
+            print u'\t%s' % sku['Name']
+
+        # print self.items[item_idx]
 
     def do_basket(self, s):
         basket = self.d.basket

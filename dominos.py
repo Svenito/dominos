@@ -34,7 +34,7 @@ class Menu(object):
 class Dominos(object):
     def __init__(self):
         self.sess = requests.session()
-        print self.sess
+        # print self.sess
         self.base_url = 'https://www.dominos.co.uk/'
         self.stores = []
         self.menu_version = None
@@ -55,7 +55,7 @@ class Dominos(object):
         url = self.base_url + ('storelocatormap/storenamesearch')
         payload = {'search': postcode}
         results = self.sess.get(url, params=payload).json()
-        print url
+        # print url
 
         if len(results) < 1:
             print 'No stores found near', postcode
@@ -76,21 +76,21 @@ class Dominos(object):
                    'storeId': store['Id'],
                    'postcode': postcode}
 
-        print 'Cookie get payload', payload
-        print 'cookies before:', self.sess.cookies
+        # print 'Cookie get payload', payload
+        # print 'cookies before:', self.sess.cookies
         r = self.sess.get(url, params=payload)
-        print 'cookies after:', self.sess.cookies
-        print 'Cookie get status:', r.status_code
-        print 'Cookie history:', r.history
-        print
+        # print 'cookies after:', self.sess.cookies
+        # print 'Cookie get status:', r.status_code
+        # print 'Cookie history:', r.history
+        # print
 
     def get_store_context(self):
         url = self.base_url + 'ProductCatalog/GetStoreContext'
         payload = {'_': self.get_epoch()}
         headers = {'content-type': 'application/json; charset=utf-8'}
-        print 'Context cookie state:', self.sess.cookies
+        # print 'Context cookie state:', self.sess.cookies
         r = self.sess.get(url, params=payload, headers=headers)
-        print 'Context status:', r.status_code
+        # print 'Context status:', r.status_code
 
         try:
             context = r.json()
@@ -106,8 +106,8 @@ class Dominos(object):
     def get_basket(self):
         url = self.base_url + '/Basket/GetBasket?'
         r = self.sess.get(url)
-        print self.sess.cookies
-        print r.status_code
+        # print self.sess.cookies
+        # print r.status_code
         try:
             self.basket = Basket(**(r.json()))
         except:
@@ -126,14 +126,13 @@ class Dominos(object):
         url = (self.base_url + '/ProductCatalog/GetStoreCatalog?'
                'collectionOnly=false&menuVersion=%s&storeId=%s' %
                (self.menu_version, store['Id']))
-        print url
+        # print url
         r = self.sess.get(url)
 
         idx = 0
         for item in r.json():
             for i in item['Subcategories']:
                 for p in i['Products']:
-                    print idx
                     p['idx'] = idx
                     self.menu.addItem(i['Name'], Item(**p))
                     idx += 1
@@ -164,8 +163,8 @@ class Dominos(object):
         headers = {'content-type': 'application/json; charset=utf-8'}
 
         r = self.sess.post(url, params=payload, headers=headers)
-        print r.status_code
-        print r.json()
+        # print r.status_code
+        # print r.json()
 
 
 if __name__ == '__main__':
