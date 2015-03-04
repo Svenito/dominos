@@ -36,7 +36,7 @@ class Menu(object):
             print '-------------'
             print cat
             for item in items:
-                print(u'[%d] %s - %s' % (idx, item.Name, item.Price))
+                print(u'[%d] %s - %s' % (idx, item.Name, item.DisplayPrice))
                 idx += 1
 
 
