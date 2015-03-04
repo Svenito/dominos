@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 
 import cmd
+import sys
 import time
 from dominos import Dominos
 
@@ -119,6 +120,8 @@ class DominosCLI(cmd.Cmd):
         print u'Total: %s' % basket.FormattedTotalPrice
         print u'Deal Savings: %s' % self.d.basket.FormattedDealSaving
 
+    def do_exit(self, s):
+        return True
 
 if __name__ == '__main__':
     x = DominosCLI()
