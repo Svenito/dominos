@@ -7,6 +7,7 @@ import time
 import calendar
 import unicodedata
 import json
+import cmd
 
 class Item(object):
     def __init__(self, **entries):
@@ -18,7 +19,7 @@ class Basket(object):
         self.__dict__.update(entries)
 
     def __repr__(self):
-         return self.__dict__
+         return str(self.__dict__)
 
 
 class Menu(object):
@@ -27,17 +28,15 @@ class Menu(object):
 
     def addItem(self, category, item):
         self.items.setdefault(category, [])
-
         self.items[category].append(item)
 
-    def print_menu(self):
+    def print_menu(self, category=None):
         idx = 0
         for cat, items in self.items.iteritems():
             print '-------------'
             print cat
             for item in items:
-                name = unicodedata.normalize('NFKD', item.Name).encode('ascii','ignore')
-                print '[%d] %s' % (idx, name)
+                print(u'[%d] %s - %s' % (idx, item.Name, item.Price))
                 idx += 1
 
 
@@ -47,6 +46,7 @@ class Dominos(object):
         print self.sess
         self.base_url = 'https://www.dominos.co.uk/'
         self.stores = []
+        self.menu_version = None
         self.menu = Menu()
 
         self.reset_session()
@@ -60,6 +60,7 @@ class Dominos(object):
         return calendar.timegm(time.gmtime())
 
     def search_stores(self, postcode):
+        self.stores = []
         url = self.base_url + ('storelocatormap/storenamesearch')
         payload = {'search': postcode}
         results = self.sess.get(url, params=payload).json()
@@ -76,19 +77,14 @@ class Dominos(object):
         return self.stores
 
     def select_store(self, idx):
-        try:
-            return self.stores[idx]
-        except IndexError:
-            print 'Invalid store selected'
-            return None
-
+        return self.stores[idx]
 
     def get_cookie(self, store, postcode):
         url = self.base_url + 'Journey/Initialize'
         payload = {'fulfilmentmethod':'1',
                    'storeId' : store['Id'],
                    'postcode' : postcode}
-        print 'Cookie pget payload', payload
+        print 'Cookie get payload', payload
         print 'cookies before:', self.sess.cookies
         r = self.sess.get(url, params=payload)
         print 'cookies after:', self.sess.cookies
@@ -127,7 +123,14 @@ class Dominos(object):
             return False
         return True
 
+    def print_basket(self):
+        print self.basket
+
     def get_menu(self, store):
+        self.menu = Menu()
+        if not self.menu_version:
+            return None
+
         url = (self.base_url + '/ProductCatalog/GetStoreCatalog?'
                 'collectionOnly=false&menuVersion=%s&storeId=%s' %
                 (self.menu_version, store['Id']))
@@ -139,10 +142,11 @@ class Dominos(object):
                 for p in i['Products']:
                     self.menu.addItem(i['Name'], Item(**p))
 
-    def show_menu(self):
-        self.menu.print_menu()
+    def show_menu(self, s=None):
+        self.menu.print_menu(s)
 
     def add_item(self, item):
+        url = self.base_url + '/Basket/AddPizza/'
         pass
 
     def add_margarita(self):
@@ -157,7 +161,6 @@ class Dominos(object):
 
         #self.get_basket()
         #pprint.pprint(self.basket)
-
 
 if __name__ == '__main__':
     d = Dominos()
@@ -199,7 +202,8 @@ if __name__ == '__main__':
     d.show_menu()
 
     #d.add_margarita()
-'''
+    '''
+
     gets cookie:
     https://www.dominos.co.uk/Journey/Initialize?fulfilmentmethod=1&storeId=2816
 
@@ -208,4 +212,4 @@ if __name__ == '__main__':
 
     list menu:
     https://www.dominos.co.uk/Tracking/ListingProductsDisplayed?productIds=12%7C
-'''
+    '''
