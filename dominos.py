@@ -8,6 +8,10 @@ import json
 import pprint
 
 class Item(object):
+    '''
+    Wrapper around a menu Item. Basically provides
+    class like interface to the Item dictionary
+    '''
     def __init__(self, **entries):
         self.__dict__.update(entries)
 
@@ -16,6 +20,10 @@ class Item(object):
 
 
 class Basket(object):
+    '''
+    Wrapper around the Basket dictionary returned from
+    server. Allows class like access to Basket
+    '''
     def __init__(self, **entries):
         self.__dict__.update(entries)
 
@@ -24,18 +32,27 @@ class Basket(object):
 
 
 class Menu(object):
+    '''
+    Menu is a container for Items.
+    '''
     def __init__(self):
         self.items = {}
 
     def addItem(self, category, item):
+        '''
+        Add an item of category to menu
+        '''
         self.items.setdefault(category, [])
         self.items[category].append(item)
 
 
 class Dominos(object):
+    '''
+    Main class to interact with the dominos.co.uk
+    site
+    '''
     def __init__(self):
         self.sess = requests.session()
-        # print self.sess
         self.base_url = 'https://www.dominos.co.uk/'
         self.stores = []
         self.menu_version = None
@@ -44,14 +61,26 @@ class Dominos(object):
         self.reset_session()
 
     def reset_session(self):
+        '''
+        Clear out a local and serverside session. Expires a session by
+        hitting the SessionExpire URL and creating a new requests.session
+        '''
         url = self.base_url + '/Home/SessionExpire'
         self.sess.get(url)
         self.sess = requests.session()
 
     def get_epoch(self):
+        '''
+        Utility function used to get current epoch time. Required for some
+        calls
+        '''
         return calendar.timegm(time.gmtime())
 
     def search_stores(self, postcode):
+        '''
+        Given a search query returns all matching store objects.
+        These are then stored in the stores list.
+        '''
         self.stores = []
         url = self.base_url + ('storelocatormap/storenamesearch')
         payload = {'search': postcode}
@@ -63,9 +92,18 @@ class Dominos(object):
         return self.stores
 
     def select_store(self, idx):
+        '''
+        Givn an index return a store dictionary
+        '''
         return self.stores[idx]
 
     def get_cookie(self, store, postcode):
+        '''
+        Set local cookies by initialising the delivery system on the
+        remote. Requires a store ID and a delivery postcode. This
+        must be called once a store ID is known, as the generated cookies
+        are needed for future calls.
+        '''
         url = self.base_url + 'Journey/Initialize'
         payload = {'fulfilmentmethod': '1',
                    'storeId': store['Id'],
@@ -74,6 +112,12 @@ class Dominos(object):
         r = self.sess.get(url, params=payload)
 
     def get_store_context(self):
+        '''
+        Get the required context for the store. This must be called at
+        some point after get_cookie and before you are able to get a
+        basket. This might fail due to possible rate limiting on the remote
+        end. Some times waiting a little and retrying will make it succeed.
+        '''
         url = self.base_url + 'ProductCatalog/GetStoreContext'
         payload = {'_': self.get_epoch()}
         headers = {'content-type': 'application/json; charset=utf-8'}
@@ -88,6 +132,10 @@ class Dominos(object):
         return True
 
     def get_basket(self):
+        '''
+        Get the current basket object. get_store_context must be called first.
+        May also fail, but will usually succeed if retried.
+        '''
         url = self.base_url + '/Basket/GetBasket?'
         r = self.sess.get(url)
 
@@ -101,6 +149,11 @@ class Dominos(object):
         print self.basket
 
     def get_menu(self, store):
+        '''
+        Retrieve the menu for the currently set store. get_basket and
+        get_store_context must be called successfully before this can be
+        called.
+        '''
         self.menu = Menu()
         if not self.menu_version:
             return None
@@ -118,13 +171,16 @@ class Dominos(object):
                     self.menu.addItem(i['Type'], Item(**p))
                     idx += 1
 
-        print item['Subcategories'][0]
         return self.menu
 
     def show_menu(self, s=None):
         self.menu.print_menu(s)
 
     def add_item(self, item, size_idx):
+        '''
+        Add an item to the basket. Provide the item object and
+        a size index. Will overwrite the basket with the new basket.
+        '''
         url = self.base_url
 
         if item.Type == 'Pizza':
@@ -161,24 +217,6 @@ class Dominos(object):
             return False
 
         return True
-
-    def add_margarita(self):
-        url = self.base_url + '/Basket/AddPizza/'
-        payload = {"basketItemId": 'null',
-                   "stepId": 0,
-                   "saveName": 'null',
-                   "quantity": 1,
-                   "sizeId": 3,
-                   "productId": 12,
-                   "ingredients[]": [42, 36],
-                   "productIdHalfTwo": 0,
-                   "ingredientsHalfTwo[]": [],
-                   "recipeReferrer": 0,
-                   "recipeReferralCode": 'null'}
-
-        headers = {'content-type': 'application/json; charset=utf-8'}
-
-        r = self.sess.post(url, data=payload, headers=headers)
 
 
 if __name__ == '__main__':
