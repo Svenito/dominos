@@ -114,9 +114,10 @@ class Dominos(object):
             for i in item['Subcategories']:
                 for p in i['Products']:
                     p['idx'] = idx
-                    self.menu.addItem(i['Name'], Item(**p))
+                    self.menu.addItem(i['Type'], Item(**p))
                     idx += 1
 
+        print item['Subcategories'][0]
         return self.menu
 
     def show_menu(self, s=None):
