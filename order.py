@@ -93,8 +93,6 @@ class DominosCLI(cmd.Cmd):
 
                 print
 
-        # pprint.pprint(self.items[12])
-
     def help_menu(self):
         print('Shows the menu for the currently selected store. '
               'Will error if no store is set and requires '
@@ -118,7 +116,10 @@ class DominosCLI(cmd.Cmd):
             print (u'\t[%d] %s - %s' %
                    (i, sku['Name'], sku['DisplayPrice']))
 
-        # print self.items[item_idx]
+    def help_info(self):
+        print('Show detailed info for item of given index. '
+              'Will include available sizes to use when adding an item to '
+              'basket')
 
     def do_add(self, s):
         if not self.items:
@@ -142,8 +143,18 @@ class DominosCLI(cmd.Cmd):
         else:
             print('[Error] Failed to add %s to basket' % item.name)
 
+    def help_add(self):
+        print('Add an item to the basket. Must provide item Id as '
+              'specified when viewing `menu`, followed by size index. '
+              'Size index can be obtained by running `info <item_idx>` '
+              'where item_idx is the menu index of the item.')
+
     def do_remove(self, s):
         self.d.remove_item(int(s))
+
+    def help_remove(self):
+        print('Remove item from basket. Provide basket index of item. This '
+              'is the number by the item when viewing basket contents.')
 
     def do_basket(self, s):
         if not self.d.basket:
@@ -160,6 +171,9 @@ class DominosCLI(cmd.Cmd):
         print(u'Total:\t\t\t%s' % basket.FormattedTotalPrice)
         print(u'Deal Savings:\t\t%s' % self.d.basket.FormattedDealSaving)
 
+    def help_basket(self):
+        print('Show the contents of the basket')
+
     def do_exit(self, s):
         return True
 
@@ -171,4 +185,6 @@ class DominosCLI(cmd.Cmd):
 
 if __name__ == '__main__':
     x = DominosCLI()
+    print('Welcome to Dominos CLI. Order your pizza from the comfort of '
+          'your command line. Use `help` for help on the commands.')
     x.cmdloop()
