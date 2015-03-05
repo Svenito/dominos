@@ -17,9 +17,6 @@ API Docs
 .. automodule:: dominos.dominos
     :members:
 
-.. autoclass:: dominos.dominos.Dominos
-    :members:
-
 Indices and tables
 ==================
 
