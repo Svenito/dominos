@@ -9,7 +9,7 @@ import sys
 import time
 import calendar
 import json
-import pprint
+
 
 class Item(object):
     '''
@@ -118,7 +118,7 @@ class Dominos(object):
                    'storeId': store['Id'],
                    'postcode': postcode}
 
-        r = self.sess.get(url, params=payload)
+        self.sess.get(url, params=payload)
 
     def get_store_context(self):
         '''
@@ -205,8 +205,7 @@ class Dominos(object):
             sku_id = item.ProductSkus[size_idx]['ProductSkuId']
             payload = {"ProductSkuId": sku_id,
                        "Quantity": 1,
-                       "ComplimentaryItems":[]}
-
+                       "ComplimentaryItems": []}
 
         headers = {'content-type': 'application/json; charset=utf-8'}
         r = self.sess.post(url, data=json.dumps(payload), headers=headers)
@@ -220,6 +219,30 @@ class Dominos(object):
             return False
 
         return True
+
+    def remove_item(self, basket_item_idx):
+        '''
+        Remove an item at basket position item_idx from the basket
+        '''
+        item = Item(**self.basket.Items[basket_item_idx])
+
+        # https://www.dominos.co.uk/Basket/RemoveBasketItem/?basketItemId=3&wizardItemDelete=false
+        url = self.base_url + '/Basket/RemoveBasketItem'
+        payload = {'basketItemId': item.BasketItemId,
+                   'wizardItemDelete': False}
+
+        r = self.sess.get(url, params=payload)
+        if r.status_code != 200:
+            print('[Error] Connection failed to remove item.')
+            return
+
+        try:
+            self.basket = Basket(**r.json())
+        except:
+            print('[Error] Error removing item. Invalid response.')
+            return
+
+        print(u'[OK] Removed %s' % item.Title)
 
 
 if __name__ == '__main__':

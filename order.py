@@ -3,7 +3,7 @@
 import cmd
 import sys
 import time
-from dominos import Dominos
+from dominos import dominos
 
 import pprint
 
@@ -12,7 +12,7 @@ class DominosCLI(cmd.Cmd):
         # super(DominosCLI, self).__init__()
         cmd.Cmd.__init__(self)
         self.prompt = 'Pizza> '
-        self.d = Dominos()
+        self.d = dominos.Dominos()
         self.postcode = None
         self.current_store = None
         self.items = {}
@@ -141,6 +141,9 @@ class DominosCLI(cmd.Cmd):
             print('[OK] One %s added to basket' % item_name)
         else:
             print('[Error] Failed to add %s to basket' % item.name)
+
+    def do_remove(self, s):
+        self.d.remove_item(int(s))
 
     def do_basket(self, s):
         if not self.d.basket:
