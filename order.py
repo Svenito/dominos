@@ -1,11 +1,10 @@
 #!/usr/bin/env python2.7
 
 import cmd
-import sys
 import time
 from dominos import dominos
-
 import pprint
+
 
 class DominosCLI(cmd.Cmd):
     def __init__(self):
@@ -103,7 +102,7 @@ class DominosCLI(cmd.Cmd):
             print '[Error] Please run `menu` before this cmd'
 
         item_idx = int(item_idx)
-        if not item_idx in self.items.keys():
+        if item_idx not in self.items.keys():
             print '[Error] Item with idx %s not found' % item_idx
             return
 
@@ -141,7 +140,7 @@ class DominosCLI(cmd.Cmd):
         if self.d.add_item(self.items[item_idx], size_idx):
             print('[OK] One %s added to basket' % item_name)
         else:
-            print('[Error] Failed to add %s to basket' % item.name)
+            print('[Error] Failed to add %s to basket' % item_name)
 
     def help_add(self):
         print('Add an item to the basket. Must provide item Id as '
