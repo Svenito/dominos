@@ -125,21 +125,29 @@ class Dominos(object):
         self.menu.print_menu(s)
 
     def add_item(self, item, size_idx):
-        url = self.base_url + '/Basket/AddPizza/'
+        url = self.base_url
 
-        # always cheese and tomato sauce
-        ingredients = item.ProductSkus[size_idx]['Ingredients']
         if item.Type == 'Pizza':
+            url += '/Basket/AddPizza/'
+            ingredients = item.ProductSkus[size_idx]['Ingredients']
+            # always cheese and tomato sauce
             ingredients += [42, 36]
 
-        payload = {"stepId": 0,
-                   "quantity": 1,
-                   "sizeId": size_idx,
-                   "productId": item.ProductId,
-                   "ingredients": ingredients,
-                   "productIdHalfTwo": 0,
-                   "ingredientsHalfTwo": [],
-                   "recipeReferrer": 0}
+            payload = {"stepId": 0,
+                       "quantity": 1,
+                       "sizeId": size_idx,
+                       "productId": item.ProductId,
+                       "ingredients": ingredients,
+                       "productIdHalfTwo": 0,
+                       "ingredientsHalfTwo": [],
+                       "recipeReferrer": 0}
+        elif item.Type == 'Side':
+            url += '/Basket/AddProduct/'
+            sku_id = item.ProductSkus[size_idx]['ProductSkuId']
+            payload = {"ProductSkuId": sku_id,
+                       "Quantity": 1,
+                       "ComplimentaryItems":[]}
+
 
         headers = {'content-type': 'application/json; charset=utf-8'}
         r = self.sess.post(url, data=json.dumps(payload), headers=headers)
