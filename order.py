@@ -5,6 +5,7 @@ import sys
 import time
 from dominos import Dominos
 
+import pprint
 
 class DominosCLI(cmd.Cmd):
     def __init__(self):
@@ -83,8 +84,16 @@ class DominosCLI(cmd.Cmd):
             print cat
             for item in items:
                 self.items[item.idx] = item
-                print(u'[%s] %s - %s' %
-                      (item.idx, item.Name, item.DisplayPrice))
+                print(u'[%s] %s - %s ' %
+                      (item.idx, item.Name, item.DisplayPrice)),
+                if item.IsVegetarian:
+                    print(u'\u24cb '),
+                if item.IsHot:
+                    print(u'\u2668'),
+
+                print
+
+        # pprint.pprint(self.items[12])
 
     def help_menu(self):
         print('Shows the menu for the currently selected store. '
