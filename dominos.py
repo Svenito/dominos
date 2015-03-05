@@ -4,7 +4,8 @@ import requests
 import sys
 import time
 import calendar
-
+import json
+import pprint
 
 class Item(object):
     def __init__(self, **entries):
@@ -123,9 +124,35 @@ class Dominos(object):
     def show_menu(self, s=None):
         self.menu.print_menu(s)
 
-    def add_item(self, item):
-        # url = self.base_url + '/Basket/AddPizza/'
-        pass
+    def add_item(self, item, size_idx):
+        url = self.base_url + '/Basket/AddPizza/'
+
+        # always cheese and tomato sauce
+        ingredients = item.ProductSkus[size_idx]['Ingredients']
+        if item.Type == 'Pizza':
+            ingredients += [42, 36]
+
+        payload = {"stepId": 0,
+                   "quantity": 1,
+                   "sizeId": size_idx,
+                   "productId": item.ProductId,
+                   "ingredients": ingredients,
+                   "productIdHalfTwo": 0,
+                   "ingredientsHalfTwo": [],
+                   "recipeReferrer": 0}
+
+        headers = {'content-type': 'application/json; charset=utf-8'}
+        r = self.sess.post(url, data=json.dumps(payload), headers=headers)
+
+        if r.status_code != 200:
+            return False
+
+        try:
+            self.basket = Basket(**r.json())
+        except:
+            return False
+
+        return True
 
     def add_margarita(self):
         url = self.base_url + '/Basket/AddPizza/'
@@ -143,7 +170,7 @@ class Dominos(object):
 
         headers = {'content-type': 'application/json; charset=utf-8'}
 
-        r = self.sess.post(url, params=payload, headers=headers)
+        r = self.sess.post(url, data=payload, headers=headers)
 
 
 if __name__ == '__main__':

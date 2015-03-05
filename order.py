@@ -59,7 +59,7 @@ class DominosCLI(cmd.Cmd):
         tries = 0
         while not self.d.get_basket() and tries < 2:
             print '.',
-            tries += 2
+            tries += 1
 
         if tries >= 2:
             print '[Error] Failed to get basket'
@@ -100,7 +100,7 @@ class DominosCLI(cmd.Cmd):
               'Will error if no store is set and requires '
               '`init_delivery` to have been run.')
 
-    def do_details(self, item_idx):
+    def do_info(self, item_idx):
         if not self.items:
             print '[Error] Please run `menu` before this cmd'
 
@@ -114,23 +114,57 @@ class DominosCLI(cmd.Cmd):
         print u'%s - %s' % (item.Name, item.DisplayPrice)
         print u'%s' % item.Description
         print 'Sizes available:'
-        for sku in item.ProductSkus:
-            print u'\t%s' % sku['Name']
+        for i, sku in enumerate(item.ProductSkus):
+            print (u'\t[%d] %s - %s' %
+                   (i, sku['Name'], sku['DisplayPrice']))
 
         # print self.items[item_idx]
 
-    def do_basket(self, s):
-        basket = self.d.basket
-        for i, item in enumerate(basket.Items):
-            print u'%d. %s' % (i, item)
+    def do_add(self, s):
+        if not self.items:
+            print '[Error] Please run `menu` before this cmd'
 
-        print u'\nItem count: %s' % basket.TotalItemCount
-        print u'-------------------------------'
-        print u'Total: %s' % basket.FormattedTotalPrice
-        print u'Deal Savings: %s' % self.d.basket.FormattedDealSaving
+        details = s.split()
+        if len(details) < 2:
+            print('[Error] Specify item ID and a size. '
+                  'Use `info` cmd to see sizes for each item.')
+
+        try:
+            item_idx = int(details[0])
+            size_idx = int(details[1])
+        except TypeError:
+            print('[Error] Invalid item ID or size')
+            return
+
+        item_name = self.items[item_idx].Name
+        if self.d.add_item(self.items[item_idx], size_idx):
+            print('[OK] One %s added to basket' % item_name)
+        else:
+            print('[Error] Failed to add %s to basket' % item.name)
+
+    def do_basket(self, s):
+        if not self.d.basket:
+            print('[Error] No basket yet. Run `deliver_to` first')
+            return
+
+        basket = self.d.basket
+        print('Current basket:\n')
+        for i, item in enumerate(basket.Items):
+            print(u'%d. %s - %s' % (i, item['Title'], item['FormattedPrice']))
+
+        print(u'\nItem count:\t\t%s' % basket.TotalItemCount)
+        print(u'-------------------------------')
+        print(u'Total:\t\t\t%s' % basket.FormattedTotalPrice)
+        print(u'Deal Savings:\t\t%s' % self.d.basket.FormattedDealSaving)
 
     def do_exit(self, s):
         return True
+
+    def do_debug_item(self, s):
+        pprint.pprint(self.items[int(s)])
+
+    def do_debug_basket(self, s):
+        pprint.pprint(self.d.basket)
 
 if __name__ == '__main__':
     x = DominosCLI()
