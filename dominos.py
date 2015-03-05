@@ -145,9 +145,6 @@ class Dominos(object):
             return False
         return True
 
-    def print_basket(self):
-        print self.basket
-
     def get_menu(self, store):
         '''
         Retrieve the menu for the currently set store. get_basket and
@@ -172,9 +169,6 @@ class Dominos(object):
                     idx += 1
 
         return self.menu
-
-    def show_menu(self, s=None):
-        self.menu.print_menu(s)
 
     def add_item(self, item, size_idx):
         '''
