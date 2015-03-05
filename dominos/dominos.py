@@ -1,5 +1,9 @@
 #!/usr/bin/env python2.7
 
+'''
+.. module:: dominos
+'''
+
 import requests
 import sys
 import time
@@ -40,8 +44,13 @@ class Menu(object):
 
     def addItem(self, category, item):
         '''
-        Add an item of category to menu
+        Add an item of category to this menu.
+
+        :param category: The category of this item. Usually item.Type
+        :param item: The item to add
+
         '''
+
         self.items.setdefault(category, [])
         self.items[category].append(item)
 
