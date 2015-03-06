@@ -6,19 +6,20 @@
 Welcome to Dominos API's documentation!
 =======================================
 
+These are the docs for the unofficial API for dominos.co.uk. A project 
+made out of curiosity and fun, it lets you order pizza and sides
+from your commandline. A work in progress.
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-API Docs
-========
-
-.. automodule:: dominos
-    :members:
+   usage
+   api
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
