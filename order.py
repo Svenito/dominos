@@ -44,11 +44,13 @@ class DominosCLI(cmd.Cmd):
     def do_deliver_to(self, postcode):
         self.postcode = postcode
         if not self.current_store or not self.postcode:
-            print '[Error] A current store and delivery postcode must be set'
+            print('[Error] A current store (set_store) and delivery postcode '
+                  'must be set')
             return
 
         self.d.get_cookie(self.current_store, self.postcode)
         time.sleep(1)
+
         if not self.d.get_store_context():
             print('[Error] Failed to get store context. '
                   'Try setting the store again.')
@@ -57,7 +59,6 @@ class DominosCLI(cmd.Cmd):
 
         tries = 0
         while not self.d.get_basket() and tries < 2:
-            print '.',
             tries += 1
 
         if tries >= 2:
@@ -137,11 +138,14 @@ class DominosCLI(cmd.Cmd):
             print('[Error] Invalid item ID or size')
             return
 
-        item_name = self.items[item_idx].Name
-        if self.d.add_item(self.items[item_idx], size_idx):
-            print('[OK] One %s added to basket' % item_name)
-        else:
-            print('[Error] Failed to add %s to basket' % item_name)
+        try:
+            item_name = self.items[item_idx].Name
+            if self.d.add_item(self.items[item_idx], size_idx):
+                print('[OK] One %s added to basket' % item_name)
+            else:
+                print('[Error] Failed to add %s to basket' % item_name)
+        except:
+            print('[Error] Invalid selection')
 
     def help_add(self):
         print('Add an item to the basket. Must provide item Id as '

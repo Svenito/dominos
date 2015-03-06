@@ -17,6 +17,8 @@ Contents:
 
    usage
    api
+   structures
+    
 
 Indices and tables
 ------------------

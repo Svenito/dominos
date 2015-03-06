@@ -5,30 +5,39 @@ import sys
 import time
 import calendar
 import json
+import pprint
 
 
-class Item(object):
+class Base(object):
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+    def __repr__(self):
+        return pprint.pformat(self.__dict__)
+
+
+class Item(Base):
     '''
     Wrapper around a menu Item. Basically provides
     class like interface to the Item dictionary.
     '''
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
-
-    def __repr__(self):
-        return str(self.__dict__)
+    pass
 
 
-class Basket(object):
+class Basket(Base):
     '''
     Wrapper around the Basket dictionary returned from
     server. Provides class like access to Basket.
     '''
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
+    pass
 
-    def __repr__(self):
-        return str(self.__dict__)
+
+class Store(Base):
+    '''
+    Wrapper around the Store dictionary returned from server.
+    Provides class like access to Store details.
+    '''
+    pass
 
 
 class Menu(object):
@@ -55,6 +64,14 @@ class Menu(object):
             return self.items[category]
         except:
             return []
+
+    def __repr__(self):
+        out = ''
+        for cat, items in self.items.iteritems():
+            out += cat + '\n'
+            for item in items:
+                out += item.Name + '\n'
+        return out
 
 
 class Dominos(object):
@@ -100,7 +117,8 @@ class Dominos(object):
         results = self.sess.get(url, params=payload).json()
 
         for result in results:
-            self.stores.append(result)
+            store = Store(**result)
+            self.stores.append(store)
 
         return self.stores
 
@@ -119,10 +137,13 @@ class Dominos(object):
         '''
         url = self.base_url + 'Journey/Initialize'
         payload = {'fulfilmentmethod': '1',
-                   'storeId': store['Id'],
+                   'storeId': store.Id,
                    'postcode': postcode}
 
-        self.sess.get(url, params=payload)
+        r = self.sess.get(url, params=payload)
+        if r.status_code != 200:
+            return False
+        return True
 
     def get_store_context(self):
         '''
@@ -155,8 +176,8 @@ class Dominos(object):
         try:
             self.basket = Basket(**(r.json()))
         except:
-            return False
-        return True
+            return None
+        return self.basket
 
     def get_menu(self, store):
         '''
@@ -170,7 +191,7 @@ class Dominos(object):
 
         url = (self.base_url + '/ProductCatalog/GetStoreCatalog?'
                'collectionOnly=false&menuVersion=%s&storeId=%s' %
-               (self.menu_version, store['Id']))
+               (self.menu_version, store.Id))
         r = self.sess.get(url)
 
         idx = 0
@@ -187,9 +208,10 @@ class Dominos(object):
         '''
         Add an item to the basket. Provide the item object and
         a size index. Will overwrite the basket with the new basket.
+        The size index is the index into the item's ``ProductSkus`` list.
 
-        :param item: The item instance you want to add to the basket
-        :param size_idx: The index into the item`s available sizes.
+        Will return an updated basket on success or ``None`` on failure.
+
         '''
 
         url = self.base_url
@@ -221,14 +243,14 @@ class Dominos(object):
         r = self.sess.post(url, data=json.dumps(payload), headers=headers)
 
         if r.status_code != 200:
-            return False
+            return None
 
         try:
             self.basket = Basket(**r.json())
         except:
-            return False
+            return None
 
-        return True
+        return self.basket
 
     def remove_item(self, basket_item_idx):
         '''
@@ -236,58 +258,21 @@ class Dominos(object):
         '''
         item = Item(**self.basket.Items[basket_item_idx])
 
-        # https://www.dominos.co.uk/Basket/RemoveBasketItem/?basketItemId=3&wizardItemDelete=false
         url = self.base_url + '/Basket/RemoveBasketItem'
         payload = {'basketItemId': item.BasketItemId,
                    'wizardItemDelete': False}
 
         r = self.sess.get(url, params=payload)
         if r.status_code != 200:
-            print('[Error] Connection failed to remove item.')
-            return
+            return None
 
         try:
             self.basket = Basket(**r.json())
         except:
-            print('[Error] Error removing item. Invalid response.')
-            return
+            return None
 
-        print(u'[OK] Removed %s' % item.Title)
+        return self.basket
 
 
 if __name__ == '__main__':
-    d = Dominos()
-    stores = d.search_stores(sys.argv[1])
-
-    valid = False
-    store = 0
-    while(not valid):
-        print 'Select a store:'
-        for i, s in enumerate(stores):
-            print '[%d] %s' % (i, s['Name'])
-
-            store = int(raw_input('Store: '))
-            store = d.select_store(store)
-            if store:
-                valid = True
-
-    postcode = raw_input('Enter your postcode: ')
-    d.get_cookie(store, postcode)
-    time.sleep(2)
-
-    doit = True
-    while not d.get_store_context() and doit:
-        a = raw_input('carry on?')
-        if a == 'n':
-            doit = False
-        d.reset_session()
-
-    doit = True
-    while not d.get_basket() and doit:
-        a = raw_input('carry on?')
-        if a == 'n':
-            doit = False
-
-    d.get_menu(store)
-
-    d.show_menu()
+    pass
