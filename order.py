@@ -2,7 +2,7 @@
 
 import cmd
 import time
-from dominos import dominos
+from dominos import Dominos
 import pprint
 
 
@@ -11,7 +11,7 @@ class DominosCLI(cmd.Cmd):
         # super(DominosCLI, self).__init__()
         cmd.Cmd.__init__(self)
         self.prompt = 'Pizza> '
-        self.d = dominos.Dominos()
+        self.d = Dominos()
         self.postcode = None
         self.current_store = None
         self.items = {}
@@ -78,6 +78,7 @@ class DominosCLI(cmd.Cmd):
 
         menu = self.d.get_menu(self.current_store)
         print 'Menu for ', self.current_store['Name']
+
         for cat, items in menu.items.iteritems():
             print '---------------------------------'
             print cat

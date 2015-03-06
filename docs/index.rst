@@ -14,7 +14,7 @@ Contents:
 API Docs
 ========
 
-.. automodule:: dominos.dominos
+.. automodule:: dominos
     :members:
 
 Indices and tables
