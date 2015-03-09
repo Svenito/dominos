@@ -13,15 +13,14 @@ The CLI example project will provide a good demo of the API usage to complement
 this doc.
 
 General
--------
+~~~~~~~
 
-The API will mostly return JSON objects are they come back from the
-requests library. In some cases objects are returned, but those methods
-are documented. See the section of object definitions on how these JSON objects
-are structured.
+The API will return objects that represent the JSON objects returned from
+the Domino's site. The structure and members of these objects are documented in
+the ``object definitions`` section.
 
-Before placing orders
---------------------
+Placing orders
+~~~~~~~~~~~~~~~~~~~~
 
 Getting the store
 =================

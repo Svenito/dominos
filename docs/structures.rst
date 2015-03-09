@@ -1,5 +1,5 @@
-Structures
-----------
+Structures and return values
+----------------------------
 
 This section shows some example return data. All server
 responses are in JSON, but they are mapped into Python objects, so
@@ -13,6 +13,9 @@ fields can be accessed in a simpler way. For example:
 
 Shown below however is the raw JSON data, to show both the field names
 and the data in those fields.
+
+Return values
+~~~~~~~~~~~~~
 
 Results for ``search_store``
 ============================
@@ -115,6 +118,8 @@ Results for ``get_menu``
 The ``Menu`` object contains a dictionary of items. There are two keys
 ``Side`` and ``Pizza``. Each containing a list of ``Items`` of the category
 
+Structures
+~~~~~~~~~~
 
 Structure of an Item
 ====================

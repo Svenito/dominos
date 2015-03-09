@@ -316,6 +316,7 @@ class Dominos(object):
         url = self.base_url + '/PaymentOptions/GetPaymentDetailsData'
         '''
         GET
+        returns:
         {
           "isCashOptionAvailable": true,
           "cashOptionText": "Cash on Delivery",
@@ -336,6 +337,15 @@ class Dominos(object):
           "savedPaymentCards": null
         }
 '''
+
+    def submit_detail_summary(self):
+        '''
+        Might not be neccessary
+        '''
+        # https://www.dominos.co.uk/fulfilment/yourdetailssummarysubmit
+        # POST
+        # Body	Items%5B0%5D.item.BasketItemId	2
+        # Body	Items%5B0%5D.item.BasketItemId	3
 
     def set_payment_menthod(self):
         '''
