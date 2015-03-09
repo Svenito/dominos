@@ -74,6 +74,16 @@ class Menu(object):
         return out
 
 
+class DeliveryAddress(object):
+    def __init__(self):
+        self.first_name = ''
+        self.last_name = ''
+        self.contact_number = ''
+        self.email = ''
+        self.address_id =''
+        self.postcode = ''
+
+
 class Dominos(object):
     '''
     Main class to interact with the dominos.co.uk
@@ -272,6 +282,68 @@ class Dominos(object):
             return None
 
         return self.basket
+
+    def get_addresses(self):
+        url = self.base_url + '/fulfilment/yourdetails'
+        r = self.sess.get(url)
+
+        # TODO r is HTML. Beautifulsoup it and get address list
+
+    def set_address(self, address)
+        url = self.base_url + '/fulfilment/yourdetails'
+        payload = {'FirstName': address.first_name,
+                   'LastName' : address.last_name,
+                   'ContactNumber': address.contact_number,
+                   'EmailAddress': address.email,
+                   'DeliveryAddress.Postcode': address.postcode
+                   'AddressId': '1515951',
+                   'DeliveryAddress.AdditionalInformation': '',
+                   'AddAddressToCustomer': False,
+                   'DeliveryTime': 'ASAP',
+                   'MarketingPreferenceEmail': True
+                   'MarketingPreferenceEmail': False,
+                   'MarketingPreferenceSMS': True,
+                   'MarketingPreferenceSMS': False
+                  }
+
+        headers = {'content-type': 'application/json; charset=utf-8'}
+        r = self.sess.post(url, data.json.dumps(payload), headers=headers)
+
+        if r.status_code != 200:
+            return None
+
+    def check_cash_on_delivery(self):
+        url = self.base_url + '/PaymentOptions/GetPaymentDetailsData'
+        '''
+        GET
+        {
+          "isCashOptionAvailable": true,
+          "cashOptionText": "Cash on Delivery",
+          "isCardOptionAvailable": true,
+          "isPayPalOptionAvailable": true,
+          "cashNotAllowedText": null,
+          "cardNotAllowedText": null,
+          "payPalStatusText": null,
+          "cardUrl": "https://hps.datacash.com/hps/?HPS_SessionID=214853777",
+          "totalPrice": "Â£18.99",
+          "isCashOptionAllowed": true,
+          "savePaymentCardOption": true,
+          "paymentMethodSelected": 1,
+          "canShowSavedCards": false,
+          "canShowPayPal": true,
+          "isSavePaymentCardAvailable": false,
+          "isMaximumSavedCardsReached": false,
+          "savedPaymentCards": null
+        }
+'''
+
+    def set_payment_menthod(self):
+        '''
+        POST /PaymentOptions/SetPaymentMethod
+        {"paymentMethod":0}
+        '''
+
+        pass
 
 
 if __name__ == '__main__':
