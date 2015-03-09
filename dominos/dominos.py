@@ -284,17 +284,28 @@ class Dominos(object):
         return self.basket
 
     def get_addresses(self):
+        '''
+        Gets a list of possible addresses based on the postcode
+        passed to ``get_cookie``. Returns a dictionary with AddressIds
+        as keys and the address line as value.
+        The AddressId is passed onto the ordering system.
+        Returns an empty dictionary if no addresses can be found.
+        '''
+
         url = self.base_url + '/fulfilment/yourdetails'
         r = self.sess.get(url)
+        if r.status_code != 200:
+            return None
+
         soup = BeautifulSoup(r.text)
         try:
             address_ids = soup.find(id='AddressId').children
         except:
             print r.text
-            return None
+            return {}
 
         print(u'Select delivery address')
-        
+
         addresses = {}
         for field in address_ids:
             try:
@@ -304,7 +315,6 @@ class Dominos(object):
                 pass
 
         return addresses
-        # TODO r is HTML. Beautifulsoup it and get address list
 
     def set_address(self, address):
         url = self.base_url + '/fulfilment/yourdetails'
