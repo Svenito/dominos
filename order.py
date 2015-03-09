@@ -23,7 +23,7 @@ class DominosCLI(cmd.Cmd):
             return
 
         for i, store in enumerate(stores):
-            print '[%s] %s' % (i, store['Name'])
+            print '[%s] %s' % (i, store.Name)
 
     def help_locate_store(self):
         print('Search for a Dominos by postcode/location name. Returns '
@@ -33,7 +33,7 @@ class DominosCLI(cmd.Cmd):
         store_idx = int(store_idx)
         try:
             self.current_store = self.d.select_store(store_idx)
-            print '[OK] Selected store: %s' % self.current_store['Name']
+            print '[OK] Selected store: %s' % self.current_store.Name
         except IndexError:
             print '[Error] Invalid selection.'
 
@@ -78,7 +78,7 @@ class DominosCLI(cmd.Cmd):
             return
 
         menu = self.d.get_menu(self.current_store)
-        print 'Menu for ', self.current_store['Name']
+        print 'Menu for ', self.current_store.Name
 
         for cat, items in menu.items.iteritems():
             print '---------------------------------'
@@ -180,6 +180,26 @@ class DominosCLI(cmd.Cmd):
 
     def do_exit(self, s):
         return True
+
+    def do_get_address(self, s):
+        self.addresses = self.d.get_addresses()
+        if not self.addresses:
+            print(u'[Error] Unable to get address lists. Try again')
+            return
+            
+        for idx, address in enumerate(self.addresses.values()):
+            print '[%d] %s' % (idx, address)
+
+    def do_set_address(self, s):
+        try:
+            idx = int(s)
+        except:
+            print(u'Invalid index')
+            return
+
+        key = self.addresses.keys()[idx]
+        print self.addresses[key]
+
 
     def do_debug_item(self, s):
         pprint.pprint(self.items[int(s)])

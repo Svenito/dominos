@@ -1,11 +1,11 @@
 #!/usr/bin/env python2.7
 
 import requests
-import sys
 import time
 import calendar
 import json
 import pprint
+from bs4 import BeautifulSoup
 
 
 class Base(object):
@@ -80,7 +80,7 @@ class DeliveryAddress(object):
         self.last_name = ''
         self.contact_number = ''
         self.email = ''
-        self.address_id =''
+        self.address_id = ''
         self.postcode = ''
 
 
@@ -286,34 +286,52 @@ class Dominos(object):
     def get_addresses(self):
         url = self.base_url + '/fulfilment/yourdetails'
         r = self.sess.get(url)
+        soup = BeautifulSoup(r.text)
+        try:
+            address_ids = soup.find(id='AddressId').children
+        except:
+            print r.text
+            return None
 
+        print(u'Select delivery address')
+        
+        addresses = {}
+        for field in address_ids:
+            try:
+                if field['value']:
+                    addresses[field['value']] = field.text
+            except:
+                pass
+
+        return addresses
         # TODO r is HTML. Beautifulsoup it and get address list
 
-    def set_address(self, address)
+    def set_address(self, address):
         url = self.base_url + '/fulfilment/yourdetails'
         payload = {'FirstName': address.first_name,
-                   'LastName' : address.last_name,
+                   'LastName': address.last_name,
                    'ContactNumber': address.contact_number,
                    'EmailAddress': address.email,
-                   'DeliveryAddress.Postcode': address.postcode
+                   'DeliveryAddress.Postcode': address.postcode,
                    'AddressId': '1515951',
                    'DeliveryAddress.AdditionalInformation': '',
                    'AddAddressToCustomer': False,
                    'DeliveryTime': 'ASAP',
-                   'MarketingPreferenceEmail': True
+                   'MarketingPreferenceEmail': True,
                    'MarketingPreferenceEmail': False,
                    'MarketingPreferenceSMS': True,
                    'MarketingPreferenceSMS': False
-                  }
+                   }
 
         headers = {'content-type': 'application/json; charset=utf-8'}
-        r = self.sess.post(url, data.json.dumps(payload), headers=headers)
+        r = self.sess.post(url, payload.json.dumps(payload), headers=headers)
 
         if r.status_code != 200:
             return None
 
     def check_cash_on_delivery(self):
-        url = self.base_url + '/PaymentOptions/GetPaymentDetailsData'
+        pass
+        # rl = self.base_url + '/PaymentOptions/GetPaymentDetailsData'
         '''
         GET
         returns:
@@ -326,7 +344,7 @@ class Dominos(object):
           "cardNotAllowedText": null,
           "payPalStatusText": null,
           "cardUrl": "https://hps.datacash.com/hps/?HPS_SessionID=214853777",
-          "totalPrice": "Â£18.99",
+          "totalPrice": "18.99",
           "isCashOptionAllowed": true,
           "savePaymentCardOption": true,
           "paymentMethodSelected": 1,
