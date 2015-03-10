@@ -16,11 +16,12 @@ class DominosCLI(cmd.Cmd):
         self.current_store = None
         self.items = {}
 
-    def do_locate_store(self, s):
-        store = self.d.search_nearest_store(s)
+    def do_locate_store(self, postcode):
+        store = self.d.search_nearest_store(postcode)
         if store:
             print '[OK] Found nearest store that delivers:', store.Name
             self.current_store = store
+            self.postcode = postcode
         else:
             print '[Warn] Looks like no stores near you deliver'
 
@@ -31,11 +32,9 @@ class DominosCLI(cmd.Cmd):
         print('Select a store by number. Use `locate_store` to get a list '
               'of stores based on a search term.')
 
-    def do_deliver_to(self, postcode):
-        self.postcode = postcode
+    def do_init_delivery(self, postcode):
         if not self.current_store or not self.postcode:
-            print('[Error] A current store (set_store) and delivery postcode '
-                  'must be set')
+            print('[Error] locate_store needs to be run successfully first.')
             return
 
         self.d.get_cookie(self.current_store, self.postcode)
@@ -76,6 +75,10 @@ class DominosCLI(cmd.Cmd):
 
     def do_menu(self, s):
         menu = self.get_menu()
+        if not menu:
+            print '[Error] Unable to get menu. Store context set?'
+            return
+
         print 'Menu for ', self.current_store.Name
 
         for cat, items in menu.items.iteritems():
@@ -121,7 +124,7 @@ class DominosCLI(cmd.Cmd):
 
     def do_add(self, s):
         if not self.items:
-            print '[Error] Please run `menu` before this cmd'
+            menu = self.get_menu()
 
         details = s.split()
         if len(details) < 2:

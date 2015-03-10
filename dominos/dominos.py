@@ -26,13 +26,15 @@ class Item(Base):
 
     def __init__(self, **entries):
         self.__dict__.update(entries)
-        self.skus = []
         self.set_skus()
 
     def set_skus(self):
-        for skus in self.ProductSkus:
-            sku = self.Sku(**skus)
-            self.skus.append(sku)
+        skus = self.ProductSkus
+        self.ProductSkus = []
+
+        for sku in skus:
+            s = self.Sku(**sku)
+            self.ProductSkus.append(s)
 
 
 class Basket(Base):
@@ -66,7 +68,6 @@ class Menu(object):
         :param item: The item to add
 
         '''
-
         self.items.setdefault(category, [])
         self.items[category].append(item)
 
