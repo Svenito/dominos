@@ -37,6 +37,8 @@ class DominosCLI(cmd.Cmd):
             print('[Error] locate_store needs to be run successfully first.')
             return
 
+        self.d.reset_session()
+        
         self.d.get_cookie(self.current_store, self.postcode)
         time.sleep(1)
 
