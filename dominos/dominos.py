@@ -143,6 +143,31 @@ class Dominos(object):
 
         return self.stores
 
+    def search_nearest_store(self, postcode):
+        '''
+        Given a postcode will return the nearest Dominos that
+        delivers to that postcode.
+        Returns a Store object if one is found, otherwise returns
+        None
+        '''
+        self.stores = []
+        url = self.base_url + ('storelocatormap/storesearch')
+
+        payload = {'SearchText': postcode}
+        headers = {'content-type': 'application/json; charset=utf-8'}
+
+        results = self.sess.post(url, data=json.dumps(payload), headers=headers)
+        try:
+            stores = results.json()
+        except:
+            return None
+
+        store = None
+        if stores['LocalStore']:
+            store = Store(**stores['LocalStore'])
+
+        return store
+
     def select_store(self, idx):
         '''
         Return a store at the given index.
@@ -346,7 +371,7 @@ class Dominos(object):
                    }
 
         headers = {'content-type': 'application/json; charset=utf-8'}
-        r = self.sess.post(url, payload.json.dumps(payload), headers=headers)
+        r = self.sess.post(url, data=json.dumps(payload), headers=headers)
 
         if r.status_code != 200:
             return None

@@ -17,30 +17,15 @@ class DominosCLI(cmd.Cmd):
         self.items = {}
 
     def do_locate_store(self, s):
-        stores = self.d.search_stores(s)
-        if not stores:
-            print '[Warn] No stores found with search term ', s
-            return
-
-        for i, store in enumerate(stores):
-            print '[%s] %s' % (i, store.Name)
+        store = self.d.search_nearest_store(s)
+        if store:
+            print '[OK] Found nearest store that delivers:', store.Name
+            self.current_store = store
+        else:
+            print '[Warn] Looks like no stores near you deliver'
 
     def help_locate_store(self):
-        print('Search for a Dominos by postcode/location name. Returns '
-              'a list of stores that match the given search term')
-
-    def do_set_store(self, store_idx):
-        try:
-            store_idx = int(store_idx)
-        except ValueError:
-            print '[Error] Invalid store index.'
-            return
-
-        try:
-            self.current_store = self.d.select_store(store_idx)
-            print '[OK] Selected store: %s' % self.current_store.Name
-        except IndexError:
-            print '[Error] Invalid selection.'
+        print('Search for a Dominos that delivers to the specified postcode.')
 
     def help_set_store(self):
         print('Select a store by number. Use `locate_store` to get a list '
@@ -211,6 +196,7 @@ class DominosCLI(cmd.Cmd):
 
         key = self.addresses.keys()[idx]
         print self.addresses[key]
+
 
 
     def do_debug_item(self, s):
