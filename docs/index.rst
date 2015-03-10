@@ -31,8 +31,8 @@ Contents:
    usage
    api
    structures
-
-
+   license
+    
 Indices and tables
 ------------------
 
