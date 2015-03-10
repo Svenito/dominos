@@ -56,6 +56,9 @@ class DominosCLI(cmd.Cmd):
         else:
             print '[OK] Context and basket initialised'
 
+        #if self.d.check_cash_on_delivery():
+        #    self.d.set_payment_method()
+
     def help_deliver_to(self):
         print('Do the required set up for a delivery from the previously '
               'selected store. Will error if no store has been set. '

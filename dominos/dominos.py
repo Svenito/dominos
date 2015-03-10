@@ -388,8 +388,27 @@ class Dominos(object):
             return None
 
     def check_cash_on_delivery(self):
-        pass
-        # rl = self.base_url + '/PaymentOptions/GetPaymentDetailsData'
+        '''
+        Verifies if the selected store allows cash on delivery.
+        The current implementation only support cash on delivery, so
+        it is used to make sure we can actually order. Before this
+        call will succeed you must add something to the basket.
+        Returns True if supported, False if not
+        '''
+        url = self.base_url + '/PaymentOptions/GetPaymentDetailsData'
+
+        r = self.sess.get(url)
+        print r.text
+        result = None
+        try:
+            result = r.json()
+        except:
+            return False
+
+        if result['isCashOptionAvailable'] == 'true':
+            return True
+        else:
+            return False
         '''
         GET
         returns:
@@ -423,13 +442,24 @@ class Dominos(object):
         # Body	Items%5B0%5D.item.BasketItemId	2
         # Body	Items%5B0%5D.item.BasketItemId	3
 
-    def set_payment_menthod(self):
+    def set_payment_method(self):
         '''
         POST /PaymentOptions/SetPaymentMethod
         {"paymentMethod":0}
         '''
+        url = self.base_url + '/PaymentOptions/SetPaymentMethod'
+        payload = {'paymentMethod': 0}
+        headers = {'content-type': 'application/json; charset=utf-8'}
 
-        pass
+        r = self.sess.post(url, data=json.dumps(payload), headers=headers)
+        if r.status_code != 200:
+            return False
+
+        try:
+            print r.json()
+            return True
+        except:
+            return False
 
 
 if __name__ == '__main__':
