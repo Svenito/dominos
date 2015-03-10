@@ -21,7 +21,18 @@ class Item(Base):
     Wrapper around a menu Item. Basically provides
     class like interface to the Item dictionary.
     '''
-    pass
+    class Sku(Base):
+        pass
+
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+        self.skus = []
+        self.set_skus()
+
+    def set_skus(self):
+        for skus in self.ProductSkus:
+            sku = self.Sku(**skus)
+            self.skus.append(sku)
 
 
 class Basket(Base):
@@ -144,6 +155,7 @@ class Dominos(object):
         remote. Requires a store ID and a delivery postcode. This
         must be called once a store ID is known, as the generated cookies
         are needed for future calls.
+        Returns True on success and False on error.
         '''
         url = self.base_url + 'Journey/Initialize'
         payload = {'fulfilmentmethod': '1',
@@ -160,7 +172,7 @@ class Dominos(object):
         Get the required context for the store. This must be called at
         some point after get_cookie and before you are able to get a
         basket. This might fail due to possible rate limiting on the remote
-        end. Some times waiting a little and retrying will make it succeed.
+        end. Sometimes waiting a little and retrying will make it succeed.
         '''
         url = self.base_url + 'ProductCatalog/GetStoreContext'
         payload = {'_': self.get_epoch()}
@@ -228,7 +240,7 @@ class Dominos(object):
 
         if item.Type == 'Pizza':
             url += '/Basket/AddPizza/'
-            ingredients = item.ProductSkus[size_idx]['Ingredients']
+            ingredients = item.ProductSkus[size_idx].Ingredients
 
             # always cheese and tomato sauce
             ingredients += [42, 36]
@@ -243,7 +255,7 @@ class Dominos(object):
                        "recipeReferrer": 0}
         elif item.Type == 'Side':
             url += '/Basket/AddProduct/'
-            sku_id = item.ProductSkus[size_idx]['ProductSkuId']
+            sku_id = item.ProductSkus[size_idx].ProductSkuId
 
             payload = {"ProductSkuId": sku_id,
                        "Quantity": 1,

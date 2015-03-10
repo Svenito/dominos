@@ -30,7 +30,12 @@ class DominosCLI(cmd.Cmd):
               'a list of stores that match the given search term')
 
     def do_set_store(self, store_idx):
-        store_idx = int(store_idx)
+        try:
+            store_idx = int(store_idx)
+        except ValueError:
+            print '[Error] Invalid store index.'
+            return
+
         try:
             self.current_store = self.d.select_store(store_idx)
             print '[OK] Selected store: %s' % self.current_store.Name
@@ -61,7 +66,7 @@ class DominosCLI(cmd.Cmd):
         while not self.d.get_basket() and tries < 2:
             tries += 1
 
-        if tries >= 2:
+        if tries >= 3:
             print '[Error] Failed to get basket'
             return
         else:
@@ -72,19 +77,26 @@ class DominosCLI(cmd.Cmd):
               'selected store. Will error if no store has been set. '
               'Requires the delivery postcode as an argument.')
 
-    def do_menu(self, s):
+    def get_menu(self):
         if not self.current_store:
             print '[Error] No store set. Run `set_store` first'
             return
 
         menu = self.d.get_menu(self.current_store)
+        for cat, items in menu.items.iteritems():
+            for item in items:
+                self.items[item.idx] = item
+
+        return menu
+
+    def do_menu(self, s):
+        menu = self.get_menu()
         print 'Menu for ', self.current_store.Name
 
         for cat, items in menu.items.iteritems():
             print '---------------------------------'
             print cat
             for item in items:
-                self.items[item.idx] = item
                 print(u'[%s] %s - %s ' %
                       (item.idx, item.Name, item.DisplayPrice)),
                 if item.IsVegetarian:
@@ -101,7 +113,7 @@ class DominosCLI(cmd.Cmd):
 
     def do_info(self, item_idx):
         if not self.items:
-            print '[Error] Please run `menu` before this cmd'
+            self.get_menu()
 
         item_idx = int(item_idx)
         if item_idx not in self.items.keys():
@@ -113,9 +125,9 @@ class DominosCLI(cmd.Cmd):
         print u'%s - %s' % (item.Name, item.DisplayPrice)
         print u'%s' % item.Description
         print 'Sizes available:'
-        for i, sku in enumerate(item.ProductSkus):
+        for i, sku in enumerate(item.skus):
             print (u'\t[%d] %s - %s' %
-                   (i, sku['Name'], sku['DisplayPrice']))
+                   (i, sku.Name, sku.DisplayPrice))
 
     def help_info(self):
         print('Show detailed info for item of given index. '
@@ -186,7 +198,7 @@ class DominosCLI(cmd.Cmd):
         if not self.addresses:
             print(u'[Error] Unable to get address lists. Try again')
             return
-            
+
         for idx, address in enumerate(self.addresses.values()):
             print '[%d] %s' % (idx, address)
 
