@@ -405,8 +405,8 @@ class Dominos(object):
         except:
             return False
 
-        if (result['isCashOptionAvailable'] == 'true' and
-            result['isCashOptionAllowed'] == 'true'):
+        if (result['isCashOptionAvailable'] == True and
+            result['isCashOptionAllowed'] == True):
             return True
         else:
             return False
