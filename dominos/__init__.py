@@ -8,3 +8,4 @@
 __version__ = '0.0.1'
 
 from .dominos import Dominos
+from .dominos import Address

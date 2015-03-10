@@ -2,7 +2,7 @@
 
 import cmd
 import time
-from dominos import Dominos
+from dominos import Dominos, Address
 import pprint
 
 
@@ -113,7 +113,7 @@ class DominosCLI(cmd.Cmd):
         print u'%s - %s' % (item.Name, item.DisplayPrice)
         print u'%s' % item.Description
         print 'Sizes available:'
-        for i, sku in enumerate(item.skus):
+        for i, sku in enumerate(item.ProductSkus):
             print (u'\t[%d] %s - %s' %
                    (i, sku.Name, sku.DisplayPrice))
 
@@ -191,16 +191,32 @@ class DominosCLI(cmd.Cmd):
             print '[%d] %s' % (idx, address)
 
     def do_set_address(self, s):
+        details = s.split()
+        if len(details) < 5:
+            print(u'[Error] Please provide AddressIdx FirstName LastName PhoneNumber email')
+            return
+        self.address = Address()
+        self.address.first_name = details[1]
+        self.address.last_name = details[2]
+        self.address.contact_number = details[3]
+        self.address.email = details[4]
+        self.address.postcode = self.postcode
+
         try:
-            idx = int(s)
+            idx = int(details[0])
         except:
             print(u'Invalid index')
             return
 
         key = self.addresses.keys()[idx]
-        print self.addresses[key]
+        self.address.id = key
+        self.address.address_line = self.addresses[key]
 
+        print(u'Delivery details are: %s' % self.address)
 
+    def do_debug_payment(self, s):
+        print 'COD', self.d.check_cash_on_delivery()
+        print 'SET?', self.d.set_payment_method()
 
     def do_debug_item(self, s):
         pprint.pprint(self.items[int(s)])

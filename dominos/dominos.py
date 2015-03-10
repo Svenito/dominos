@@ -86,14 +86,26 @@ class Menu(object):
         return out
 
 
-class DeliveryAddress(object):
+class Address(object):
+    '''
+    Delivery address structure. Contains the
+    required fields to set the delivery address on
+    the site
+    '''
     def __init__(self):
         self.first_name = ''
         self.last_name = ''
         self.contact_number = ''
         self.email = ''
-        self.address_id = ''
+        self.id = ''
+        self.address_line = ''
         self.postcode = ''
+
+    def __repr__(self):
+        out = ('Name: %s %s\nAddress:[%s] %s %s\nPhone:%s\nEmail:%s' %
+               (self.first_name, self.last_name, self.id, self.address_line,
+               self.postcode, self.contact_number, self.email))
+        return out
 
 
 class Dominos(object):
@@ -329,6 +341,7 @@ class Dominos(object):
         The AddressId is passed onto the ordering system.
         Returns an empty dictionary if no addresses can be found.
         '''
+        self.get_basket()
 
         url = self.base_url + '/fulfilment/yourdetails'
         r = self.sess.get(url)
@@ -339,10 +352,7 @@ class Dominos(object):
         try:
             address_ids = soup.find(id='AddressId').children
         except:
-            print r.text
             return {}
-
-        print(u'Select delivery address')
 
         addresses = {}
         for field in address_ids:
@@ -361,7 +371,7 @@ class Dominos(object):
                    'ContactNumber': address.contact_number,
                    'EmailAddress': address.email,
                    'DeliveryAddress.Postcode': address.postcode,
-                   'AddressId': '1515951',
+                   'AddressId': address.id,
                    'DeliveryAddress.AdditionalInformation': '',
                    'AddAddressToCustomer': False,
                    'DeliveryTime': 'ASAP',
