@@ -37,15 +37,17 @@ class DominosCLI(cmd.Cmd):
             print('[Error] locate_store needs to be run successfully first.')
             return
 
-        self.d.reset_session()
-        
-        self.d.get_cookie(self.current_store, self.postcode)
+        if not self.d.get_cookie(self.current_store, self.postcode):
+            print('[Error] Failed to set cookie')
+            return
+
         time.sleep(1)
 
         if not self.d.get_store_context():
             print('[Error] Failed to get store context. '
                   'Try setting the store again.')
             self.d.reset_session()
+            self.d.reset_store()
             return
 
         tries = 0
@@ -57,9 +59,6 @@ class DominosCLI(cmd.Cmd):
             return
         else:
             print '[OK] Context and basket initialised'
-
-        #if self.d.check_cash_on_delivery():
-        #    self.d.set_payment_method()
 
     def help_deliver_to(self):
         print('Do the required set up for a delivery from the previously '
@@ -180,6 +179,11 @@ class DominosCLI(cmd.Cmd):
         print(u'Total:\t\t\t%s' % basket.FormattedTotalPrice)
         print(u'Deal Savings:\t\t%s' % self.d.basket.FormattedDealSaving)
 
+        if basket.HasDealSaving:
+            print(u'\nDeals included:')
+            for detail in basket.Discount['DiscountItems']:
+                print(u'Name: %s' % detail['DisplayName'])
+
     def help_basket(self):
         print('Show the contents of the basket')
 
@@ -222,6 +226,9 @@ class DominosCLI(cmd.Cmd):
     def do_debug_payment(self, s):
         print 'COD', self.d.check_cash_on_delivery()
         print 'SET?', self.d.set_payment_method()
+
+    def do_debug_pay(self, s):
+        self.d.proceed_payment()
 
     def do_debug_item(self, s):
         pprint.pprint(self.items[int(s)])

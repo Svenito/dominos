@@ -7,5 +7,5 @@ API Reference
 .. automodule:: dominos
    :members:
 
-.. autoclass:: Dominos
+.. autoclass:: dominos.Dominos
    :members:

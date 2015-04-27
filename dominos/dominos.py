@@ -121,6 +121,7 @@ class Dominos(object):
         self.menu = Menu()
 
         self.reset_session()
+        self.reset_store()
 
     def reset_session(self):
         '''
@@ -130,6 +131,13 @@ class Dominos(object):
         url = self.base_url + '/Home/SessionExpire'
         self.sess.get(url)
         self.sess = requests.session()
+
+    def reset_store(self):
+        '''
+        Clears out the current store and gets a cookie
+        '''
+        url = self.base_url + 'Store/Reset'
+        self.sess.get(url)
 
     def get_epoch(self):
         '''
@@ -169,7 +177,7 @@ class Dominos(object):
         payload = {'SearchText': postcode}
         headers = {'content-type': 'application/json; charset=utf-8'}
 
-        results = self.sess.post(url, data=json.dumps(payload), headers=headers)
+        results = self.sess.get(url, params=payload, headers=headers)
         try:
             stores = results.json()
         except:
@@ -196,13 +204,23 @@ class Dominos(object):
         Returns True on success and False on error.
         '''
         url = self.base_url + 'Journey/Initialize'
-        payload = {'fulfilmentmethod': '1',
-                   'storeId': store.Id,
+        payload = {'fulfilmentmethod': 'Delivery',
+                   'storeid': store.Id,
                    'postcode': postcode}
 
-        r = self.sess.get(url, params=payload)
+        xsrf = self.sess.cookies['XSRF-TOKEN']
+        headers = {'content-type': 'application/json; charset=utf-8',
+                'X-XSRF-TOKEN': xsrf}
+
+        r = self.sess.post(url, data=json.dumps(payload), headers=headers)
         if r.status_code != 200:
             return False
+
+        try:
+            context = r.json()
+        except:
+            return False
+
         return True
 
     def get_store_context(self):
@@ -215,7 +233,7 @@ class Dominos(object):
         url = self.base_url + 'ProductCatalog/GetStoreContext'
         payload = {'_': self.get_epoch()}
         headers = {'content-type': 'application/json; charset=utf-8'}
-        r = self.sess.get(url, params=payload, headers=headers)
+        r = self.sess.get(url, params=payload)#, headers=headers)
 
         try:
             context = r.json()
@@ -299,7 +317,9 @@ class Dominos(object):
                        "Quantity": 1,
                        "ComplimentaryItems": []}
 
-        headers = {'content-type': 'application/json; charset=utf-8'}
+        xsrf = self.sess.cookies['XSRF-TOKEN']
+        headers = {'content-type': 'application/json; charset=utf-8',
+                'X-XSRF-TOKEN': xsrf}
         r = self.sess.post(url, data=json.dumps(payload), headers=headers)
 
         if r.status_code != 200:
@@ -365,6 +385,16 @@ class Dominos(object):
         return addresses
 
     def set_address(self, address):
+        '''
+        Given and idx returned from `get_addresses` will
+        set that as the delivery address. Automatically
+        set marketing preferences to False.
+        address.firstname
+        address.last_name
+        address.contact_number
+        address.email
+        address.postcode
+        '''
         url = self.base_url + '/fulfilment/yourdetails'
         payload = {'FirstName': address.first_name,
                    'LastName': address.last_name,
@@ -397,16 +427,20 @@ class Dominos(object):
         '''
         url = self.base_url + '/PaymentOptions/GetPaymentDetailsData'
 
-        r = self.sess.get(url)
-        print r.text
+        xsrf = self.sess.cookies['XSRF-TOKEN']
+        headers = {'content-type': 'application/json; charset=utf-8',
+                   'X-XSRF-TOKEN': xsrf}
+
+        r = self.sess.post(url, headers=headers)
         result = None
         try:
             result = r.json()
         except:
+            print "ERROR"
             return False
 
         if (result['isCashOptionAvailable'] == True and
-            result['isCashOptionAllowed'] == True):
+                result['isCashOptionAllowed'] == True):
             return True
         else:
             return False
@@ -432,7 +466,7 @@ class Dominos(object):
           "isMaximumSavedCardsReached": false,
           "savedPaymentCards": null
         }
-'''
+    '''
 
     def submit_detail_summary(self):
         '''
@@ -445,23 +479,198 @@ class Dominos(object):
 
     def set_payment_method(self):
         '''
+        Set the payment method to Cash On Delivery, the only
+        method currently supported.
+
         POST /PaymentOptions/SetPaymentMethod
         {"paymentMethod":0}
         '''
         url = self.base_url + '/PaymentOptions/SetPaymentMethod'
         payload = {'paymentMethod': 0}
-        headers = {'content-type': 'application/json; charset=utf-8'}
+        xsrf = self.sess.cookies['XSRF-TOKEN']
+        headers = {'content-type': 'application/json; charset=utf-8',
+                   'X-XSRF-TOKEN': xsrf}
 
         r = self.sess.post(url, data=json.dumps(payload), headers=headers)
         if r.status_code != 200:
             return False
 
         try:
-            print r.json()
             return True
         except:
             return False
 
+    def proceed_payment(self):
+        '''
+        *UNTESTED IN REAL LIFE*
+        Complete payment and submit to store. Brace for delivery
+        POST /paymentoptions/proceed (yes, lowercase)
+        no args
+        '''
+        url = self.base_url + 'paymentoptions/proceed'
+
+        xsrf = self.sess.cookies['XSRF-TOKEN']
+        headers = {'content-type': 'application/json; charset=utf-8',
+                   'X-XSRF-TOKEN': xsrf}
+        payload = {'__RequestVerificationToken': self.sess.cookies,
+                   'method': 'submit'}
+        r = self.sess.post(url, data=json.dumps(payload), headers=headers)
+        if r.status_code != 200:
+            return False
+
+        return True
+
+    def get_confirmation(self):
+        '''
+        *UNTESTED IN THE WILD*
+        Returns the delivery details for tracking and
+        confirmation.
+        GET /tracking/pageload
+        {"pageType": "CheckoutComplete",
+         "dataLayerFormat": "ConfirmationThankYou"}
+        '''
+        url = self.base_url + 'tracking/pageload'
+        payload = {"pageType": "CheckoutComplete",
+                   "dataLayerFormat": "ConfirmationThankYou"}
+
+        r = self.sess.get(url, params=payload)
+        try:
+            return r.json()
+        except:
+            return ''
+
+        '''
+        window.dataLayer.push({
+  "site": {
+    "environment": "07",
+    "versionNo": "9.1.0.1610",
+    "versionName": "Beta"
+  },
+  "user": {
+    "id": "anon",
+    "loginState": "false",
+    "loginType": "anon",
+    "existingCustomer": "false",
+    "language": "en-GB"
+  },
+  "page": {
+    "type": "Confirmation Thank You",
+    "subType": "checkout-page",
+    "url": ""
+  },
+  "store": {
+    "id": 281,
+    "name": "London",
+    "city": "London Region",
+    "postcode": "XX8 XX8"
+  },
+  "transaction": {
+    "id": "XXXXXXXXX",
+    "affiliation": "London",
+    "subTotal": "36.97",
+    "total": "22.48",
+    "shipping": "0.00",
+    "paymentType": "Cash",
+    "currency": "GBP",
+    "shippingMethod": "Delivery",
+    "noOfProducts": "3.00",
+    "deliveryTime": "01/01/0001 00:00:00",
+    "quantity": "3.00"
+  },
+  "transactionProducts": [
+    {
+      "id": "3174179",
+      "name": "BOGOF",
+      "nameParent": "BOGOF",
+      "category": "MealDeal",
+      "originalPrice": "28.98",
+      "price": "14.49",
+      "offerName": "BOGOF",
+      "offerSaving": "14.49",
+      "upsellType": "",
+      "currency": "GBP",
+      "quantity": 1,
+      "dealType": "MealDeal",
+      "partOfDeal": "deal",
+      "productIds": "50|50",
+      "productNames": "Create Your Own|Create Your Own"
+    },
+    {
+      "id": "1443",
+      "variantId": "1655",
+      "name": "14 Chicken Kickers",
+      "nameParent": "14 Chicken Kickers",
+      "image": "CHICKEN_KICKERS_14.jpg",
+      "thumbnail": "icons/chicken.png",
+      "category": "Side",
+      "subCategory": "Chicken",
+      "price": "7.99",
+      "offerSaving": "0.00",
+      "upsellType": "",
+      "currency": "GBP",
+      "quantity": 1,
+      "flavourDietry": "",
+      "size": "",
+      "dealType": "",
+      "partOfDeal": "false",
+      "numberPassed": "1443"
+    },
+    {
+      "id": "999",
+      "variantId": "50",
+      "name": "Medium (8 slices) Create Your Own",
+      "nameParent": "Create Your Own",
+      "image": "create-your-own.jpg",
+      "thumbnail": "icons/pizza.png",
+      "category": "Pizza",
+      "subCategory": "CreateYourOwnPizza",
+      "price": "11.99",
+      "offerSaving": "14.49",
+      "upsellType": "",
+      "currency": "GBP",
+      "quantity": 1,
+      "flavourDietry": "gluten-Free",
+      "size": "Medium (8 slices)",
+      "pizzaCrust": "Italian Style",
+      "pizzaSauce": "Domino's Own Tomato Sauce",
+      "pizzaCheese": "Mozzarella Cheese",
+      "pizzaToppings": "Anchovies|Olives",
+      "dealType": "MealDeal",
+      "partOfDeal": "true",
+      "partOfDealId": "3174179",
+      "numberPassed": "999"
+    },
+    {
+      "id": "999",
+      "variantId": "50",
+      "name": "Medium (8 slices) Create Your Own",
+      "nameParent": "Create Your Own",
+      "image": "create-your-own.jpg",
+      "thumbnail": "icons/pizza.png",
+      "category": "Pizza",
+      "subCategory": "CreateYourOwnPizza",
+      "price": "11.99",
+      "offerSaving": "0.00",
+      "upsellType": "",
+      "currency": "GBP",
+      "quantity": 1,
+      "flavourDietry": "gluten-Free",
+      "size": "Medium (8 slices)",
+      "pizzaCrust": "Italian Style",
+      "pizzaSauce": "Domino's Own Tomato Sauce",
+      "pizzaCheese": "Mozzarella Cheese",
+      "pizzaToppings": "Olives|Pepperoni",
+      "dealType": "MealDeal",
+      "partOfDeal": "true",
+      "partOfDealId": "3174179",
+      "numberPassed": "999"
+    }
+  ]
+});
+
+window.pageContext= {pageType : 'CheckoutComplete', dataLayerFormat:
+'ConfirmationThankYou'} ;
+'''
 
 if __name__ == '__main__':
     pass

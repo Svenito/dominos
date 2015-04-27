@@ -161,3 +161,15 @@ COD call ``check_cash_on_delivery``, which will return True or False.
 
 If the store supports COD, then a call to ``set_payment_method`` will set the order
 as COD.
+
+Payment
+=======
+
+* THIS IS UNTESTED *
+
+To complete payment call ``proceed_payment`` which will return True on success
+or False on error. This is followed by a call to ``get_confirmation`` which
+will return a structure summing up the order details.
+
+So far this has been determined via session capture but not been tested in this
+API.
