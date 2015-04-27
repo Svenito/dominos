@@ -104,7 +104,7 @@ class Address(object):
     def __repr__(self):
         out = ('Name: %s %s\nAddress:[%s] %s %s\nPhone:%s\nEmail:%s' %
                (self.first_name, self.last_name, self.id, self.address_line,
-               self.postcode, self.contact_number, self.email))
+                self.postcode, self.contact_number, self.email))
         return out
 
 
@@ -496,6 +496,7 @@ class Dominos(object):
             return False
 
         try:
+            r.json()
             return True
         except:
             return False
@@ -507,6 +508,9 @@ class Dominos(object):
         POST /paymentoptions/proceed (yes, lowercase)
         no args
         '''
+        # Comment out next line to enable payments
+        return False
+
         url = self.base_url + 'paymentoptions/proceed'
 
         xsrf = self.sess.cookies['XSRF-TOKEN']
@@ -514,6 +518,7 @@ class Dominos(object):
                    'X-XSRF-TOKEN': xsrf}
         payload = {'__RequestVerificationToken': self.sess.cookies,
                    'method': 'submit'}
+
         r = self.sess.post(url, data=json.dumps(payload), headers=headers)
         if r.status_code != 200:
             return False

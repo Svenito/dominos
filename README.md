@@ -16,6 +16,7 @@ cash on delivery only and this works for .co.uk only.
 
 This is barely alpha, the submission for payment hasn't been tested yet
 (I don't order enough pizza) but that day will come.
+If you want to test it, comment out the return statement in the function.
 
 But use with care until this library can be considered stable.
 
