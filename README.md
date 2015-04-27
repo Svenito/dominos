@@ -5,8 +5,9 @@ Order dominos.co.uk pizza from your commandline.
 
 Requirements
 ============
-beautifulsoup4
-requests
+
+* beautifulsoup4
+* requests
 
 Disclaimer
 ==========
