@@ -30,6 +30,8 @@ Docs are in `docs` and can be built with Sphinx - `make html`
 The `order.py` is a test implementation of a CLI for the API. Useful for testing
 and as a reference to how the API can be used.
 
+Tests still need to be written.
+
 License
 =======
 
